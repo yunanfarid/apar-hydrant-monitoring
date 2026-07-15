@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>SIGAP • Sistem Inspeksi APAR & Hydrant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<style>
+/* =====================================================================
+   SIGAP — Sistem Inspeksi APAR & Hydrant
+   -------------------------------------------------------------------
+   Desain: tema industrial safety. Navy gelap untuk struktur, amber utk
+   aksi utama, merah/hijau/oranye utk status pemeriksaan.
+   Silakan ubah variabel di :root untuk menyesuaikan warna/identitas.
+===================================================================== */
+:root{
+  --navy-950:#0f1a24;
+  --navy-900:#16232f;
+  --navy-800:#1f3140;
+  --navy-700:#2b4356;
+  --amber-500:#f5a524;
+  --amber-600:#d98c12;
+  --red-500:#e5484d;
+  --red-600:#c8353a;
+  --green-500:#12b76a;
+  --green-600:#0d9857;
+  --orange-500:#f79009;
+  --bg:#f2f4f6;
+  --surface:#ffffff;
+  --border:#e2e6ea;
+  --text-900:#101828;
+  --text-700:#344054;
+  --text-500:#667085;
+  --radius:12px;
+  --font-ui: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:var(--font-ui);
+  background:var(--bg);
+  color:var(--text-900);
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+img{max-width:100%;}
+a{color:inherit;}
+::selection{background:var(--amber-500);color:#fff;}
+
+/* ---------- utility ---------- */
+.hidden{display:none !important;}
+.flex{display:flex;}
+.flex-col{flex-direction:column;}
+.items-center{align-items:center;}
+.justify-between{justify-content:space-between;}
+.gap-8{gap:8px;}
+.gap-12{gap:12px;}
+.gap-16{gap:16px;}
+.w-full{width:100%;}
+.text-center{text-align:center;}
+.muted{color:var(--text-500);}
+.mono{font-family:var(--font-mono);}
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#c8ccd2;border-radius:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* ---------- Login screen ---------- */
+#login-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(245,165,36,0.12), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(18,183,106,0.10), transparent 40%),
+    var(--navy-950);
+  padding:20px;
+}
+.login-card{
+  background:var(--surface);
+  border-radius:20px;
+  width:100%;
+  max-width:400px;
+  padding:36px 32px 30px;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,0.5);
+}
+.login-brand{display:flex;align-items:center;gap:12px;margin-bottom:26px;}
+.login-brand .logo{
+  width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(145deg,var(--amber-500),var(--red-500));
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 6px 16px -6px rgba(229,72,77,0.5);
+}
+.login-brand h1{font-size:19px;margin:0;letter-spacing:-0.02em;}
+.login-brand p{margin:2px 0 0;font-size:12.5px;color:var(--text-500);}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--text-700);margin-bottom:6px;}
+.field input,.field select,.field textarea{
+  width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--border);
+  font-size:14.5px;transition:border-color .15s, box-shadow .15s;background:#fbfcfd;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(245,165,36,0.18);background:#fff;
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:none;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:600;
+  transition:transform .1s, box-shadow .15s, background .15s; white-space:nowrap;
+}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:var(--amber-500);color:#241300;box-shadow:0 4px 12px -4px rgba(245,165,36,0.6);}
+.btn-primary:hover{background:var(--amber-600);}
+.btn-dark{background:var(--navy-900);color:#fff;}
+.btn-dark:hover{background:var(--navy-800);}
+.btn-ghost{background:transparent;color:var(--text-700);border:1.5px solid var(--border);}
+.btn-ghost:hover{background:#f5f6f8;}
+.btn-danger{background:var(--red-500);color:#fff;}
+.btn-danger:hover{background:var(--red-600);}
+.btn-success{background:var(--green-500);color:#fff;}
+.btn-success:hover{background:var(--green-600);}
+.btn-sm{padding:7px 12px;font-size:13px;border-radius:8px;}
+.btn-block{width:100%;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.login-error{
+  background:#fef2f2;color:var(--red-600);border:1px solid #fecaca;
+  padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;
+}
+.login-demo{margin-top:18px;padding-top:16px;border-top:1px dashed var(--border);font-size:12px;color:var(--text-500);line-height:1.6;}
+
+/* ---------- App shell ---------- */
+#app{display:none;min-height:100vh;}
+#app.active{display:flex;}
+.sidebar{
+  width:230px;flex-shrink:0;background:var(--navy-900);color:#fff;
+  display:flex;flex-direction:column;padding:18px 14px;position:sticky;top:0;height:100vh;
+}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px;}
+.sidebar-brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(145deg,var(--amber-500),var(--red-500));flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.sidebar-brand b{font-size:15px;letter-spacing:-0.01em;}
+.sidebar-brand span{display:block;font-size:10.5px;color:#8fa1b0;}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;
+  color:#c4d0da;font-size:13.5px;font-weight:500;margin-bottom:2px;transition:background .15s,color .15s;
+}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;}
+.nav-item:hover{background:var(--navy-800);color:#fff;}
+.nav-item.active{background:var(--amber-500);color:#241300;font-weight:700;}
+.nav-section-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;color:#6b7f8f;margin:16px 10px 6px;font-weight:700;}
+.sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--navy-800);}
+.user-chip{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--navy-700);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+.user-chip b{font-size:13px;display:block;}
+.user-chip small{font-size:10.5px;color:#8fa1b0;text-transform:capitalize;}
+.logout-btn{width:100%;margin-top:8px;background:var(--navy-800);color:#e2b6b6;border:none;padding:8px;border-radius:8px;font-size:12.5px;font-weight:600;}
+.logout-btn:hover{background:var(--red-600);color:#fff;}
+
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);padding:14px 26px;
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;gap:12px;flex-wrap:wrap;
+}
+.topbar h2{margin:0;font-size:18px;letter-spacing:-0.01em;}
+.topbar .sub{font-size:12.5px;color:var(--text-500);margin-top:1px;}
+.period-picker{display:flex;align-items:center;gap:8px;background:#f5f6f8;border:1px solid var(--border);border-radius:10px;padding:5px;}
+.period-picker select{border:none;background:transparent;font-size:13px;font-weight:600;padding:4px 6px;}
+.content{padding:24px 26px 60px;flex:1;}
+.mobile-topbar{display:none;}
+
+/* ---------- Dashboard ---------- */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+.stat-card .num{font-size:26px;font-weight:800;letter-spacing:-0.02em;}
+.stat-card .lbl{font-size:12.5px;color:var(--text-500);margin-top:2px;font-weight:600;}
+.stat-card.red .num{color:var(--red-500);}
+.stat-card.green .num{color:var(--green-500);}
+.stat-card.orange .num{color:var(--orange-500);}
+
+.map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;}
+.map-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;transition:box-shadow .15s, transform .15s;
+}
+.map-card:hover{box-shadow:0 12px 26px -14px rgba(16,24,40,0.25);transform:translateY(-2px);}
+.map-card .thumb{height:140px;background:#e9edf1 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--text-500);font-size:12px;position:relative;}
+.map-card .thumb .badge-count{position:absolute;top:8px;right:8px;background:rgba(15,26,36,0.75);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700;}
+.map-card .body{padding:14px 16px 16px;}
+.map-card .body h3{margin:0 0 8px;font-size:15px;}
+.progress-bar{height:7px;border-radius:20px;background:#eef0f2;overflow:hidden;}
+.progress-bar > div{height:100%;background:linear-gradient(90deg,var(--green-500),var(--green-600));border-radius:20px;transition:width .3s;}
+.map-card .prog-lbl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-500);margin-top:6px;font-weight:600;}
+
+/* ---------- Map viewer ---------- */
+.mapview-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--text-700);flex-wrap:wrap;}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block;}
+.map-canvas-wrap{
+  position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:auto;max-height:74vh;
+}
+.map-canvas{position:relative;display:inline-block;min-width:100%;}
+.map-canvas img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;}
+.map-empty{padding:70px 20px;text-align:center;color:var(--text-500);}
+
+.pin{
+  position:absolute;transform:translate(-50%,-100%);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;z-index:5;
+}
+.pin .pin-icon{
+  width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.35);
+  border:2px solid #fff;
+}
+.pin .pin-icon svg{transform:rotate(45deg);width:15px;height:15px;}
+.pin.status-red .pin-icon{background:var(--red-500);}
+.pin.status-green .pin-icon{background:var(--green-500);}
+.pin.status-orange .pin-icon{background:var(--orange-500);}
+.pin.status-red .pin-icon{animation:pinPulse 1.8s ease-in-out infinite;}
+@keyframes pinPulse{
+  0%,100%{box-shadow:0 3px 8px rgba(0,0,0,0.35),0 0 0 0 rgba(229,72,77,0.5);}
+  50%{box-shadow:0 3px 8px rgba(0,0,0,0.35),0 0 0 7px rgba(229,72,77,0);}
+}
+.pin .pin-label{
+  margin-top:3px;background:rgba(15,26,36,0.85);color:#fff;font-size:9.5px;font-weight:700;
+  padding:1px 6px;border-radius:6px;white-space:nowrap;font-family:var(--font-mono);
+}
+.pin:hover .pin-icon{filter:brightness(1.08);}
+.pin.placing{opacity:0.7;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(15,20,26,0.55);display:none;
+  align-items:center;justify-content:center;z-index:100;padding:16px;backdrop-filter:blur(2px);
+}
+.modal-overlay.active{display:flex;}
+.modal-box{
+  background:var(--surface);border-radius:16px;width:100%;max-width:560px;max-height:90vh;
+  overflow-y:auto;box-shadow:0 30px 70px -20px rgba(0,0,0,0.5);
+}
+.modal-box.wide{max-width:760px;}
+.modal-head{
+  padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2;
+}
+.modal-head h3{margin:0;font-size:16.5px;}
+.modal-head .close-x{background:#f5f6f8;border:none;width:30px;height:30px;border-radius:50%;font-size:16px;color:var(--text-500);}
+.modal-body{padding:20px 22px;}
+.modal-foot{padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--surface);}
+
+.point-info-card{background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;gap:14px;align-items:center;}
+.point-info-card .icon-badge{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.point-info-card h4{margin:0 0 2px;font-size:14.5px;}
+.point-info-card .code{font-family:var(--font-mono);font-size:12px;color:var(--text-500);}
+
+.check-item-row{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+.check-item-row .ci-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.check-item-row .ci-name{font-size:13.5px;font-weight:600;}
+.ci-options{display:flex;gap:6px;}
+.ci-opt{flex:1;text-align:center;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;font-weight:700;color:var(--text-500);transition:all .12s;}
+.ci-opt input{display:none;}
+.ci-opt.b.checked{background:#e9fbf2;border-color:var(--green-500);color:var(--green-600);}
+.ci-opt.r.checked{background:#fdeceb;border-color:var(--red-500);color:var(--red-600);}
+.ci-opt.ta.checked{background:#fef6e7;border-color:var(--orange-500);color:#a35b06;}
+
+.scan-fab{
+  position:fixed;bottom:26px;right:26px;width:58px;height:58px;border-radius:50%;
+  background:var(--amber-500);box-shadow:0 10px 24px -8px rgba(245,165,36,0.7);
+  display:flex;align-items:center;justify-content:center;z-index:40;border:none;
+}
+.scan-fab svg{width:26px;height:26px;color:#241300;}
+#scanner-view{width:100%;border-radius:12px;overflow:hidden;background:#000;min-height:280px;}
+
+/* ---------- Tables / Admin ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px;}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.card-head h3{margin:0;font-size:15.5px;}
+.card-head p{margin:2px 0 0;font-size:12.5px;color:var(--text-500);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:9px 10px;color:var(--text-500);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;border-bottom:1.5px solid var(--border);white-space:nowrap;}
+td{padding:10px;border-bottom:1px solid #f0f1f3;vertical-align:middle;}
+tr:hover td{background:#fafbfc;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge.red{background:#fdeceb;color:var(--red-600);}
+.badge.green{background:#e9fbf2;color:var(--green-600);}
+.badge.orange{background:#fef6e7;color:#a35b06;}
+.badge.gray{background:#f0f1f3;color:var(--text-700);}
+.icon-btn{background:#f5f6f8;border:none;width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--text-700);}
+.icon-btn:hover{background:#e9edf1;}
+.icon-btn.danger:hover{background:#fdeceb;color:var(--red-600);}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text-500);}
+.tag-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.tag-opt{padding:8px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-weight:600;color:var(--text-700);}
+.tag-opt.active{border-color:var(--amber-500);background:#fff8ec;color:#a35b06;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.help-text{font-size:11.5px;color:var(--text-500);margin-top:5px;line-height:1.5;}
+.toast-wrap{position:fixed;top:18px;right:18px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--navy-900);color:#fff;padding:12px 16px;border-radius:10px;font-size:13.5px;box-shadow:0 10px 24px -8px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;min-width:220px;animation:toastIn .25s ease;}
+.toast.success{background:var(--green-600);}
+.toast.error{background:var(--red-600);}
+@keyframes toastIn{from{transform:translateX(30px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+.map-place-hint{background:#fff8ec;border:1px solid #f5d896;color:#8a5a06;padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+
+.barcode-print-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.barcode-card{border:1.5px dashed var(--border);border-radius:10px;padding:14px;text-align:center;}
+.barcode-card h4{margin:0 0 2px;font-size:13px;}
+.barcode-card .loc{font-size:11px;color:var(--text-500);margin-bottom:8px;}
+.barcode-card svg{width:100%;}
+
+@media print{
+  .sidebar,.topbar,.scan-fab,.no-print{display:none !important;}
+  .content{padding:0;}
+  body{background:#fff;}
+}
+
+@media (max-width:900px){
+  .sidebar{display:none;}
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+  .content{padding:16px;}
+  .topbar{padding:12px 16px;}
+  .row2{grid-template-columns:1fr;}
+  .mobile-topbar{
+    display:flex;position:sticky;top:0;z-index:30;background:var(--navy-900);color:#fff;
+    align-items:center;justify-content:space-between;padding:12px 14px;
+  }
+  .mobile-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--navy-900);z-index:30;
+    padding:6px 4px;justify-content:space-around;box-shadow:0 -6px 16px rgba(0,0,0,0.15);
+  }
+  .mobile-nav .nav-item{flex-direction:column;font-size:9.5px;gap:3px;padding:7px 4px;flex:1;text-align:center;}
+  .mobile-nav .nav-item svg{width:19px;height:19px;}
+  .content{padding-bottom:80px;}
+}
+@media (min-width:901px){
+  .mobile-nav{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2c-1 3-4 4.5-4 8.5A4 4 0 0 0 12 14.5a4 4 0 0 0 4-4C16 6.5 13 5 12 2Z" fill="#fff"/><path d="M12 8c-.5 1.5-2 2-2 4a2 2 0 0 0 4 0c0-2-1.5-2.5-2-4Z" fill="#fff" opacity=".7"/></svg>
+      </div>
+      <div>
+        <h1>SIGAP</h1>
+        <p>Sistem Inspeksi APAR & Hydrant</p>
+      </div>
+    </div>
+    <div id="login-error" class="login-error hidden"></div>
+    <form id="login-form">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="login-username" autocomplete="username" required placeholder="mis. admin">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+    </form>
+    <div class="login-demo">
+      <b>Akun bawaan (ganti setelah setup):</b><br>
+      Admin — <span class="mono">admin / admin123</span><br>
+      Vendor 1 — <span class="mono">vendor1 / vendor123</span><br>
+      Vendor 2 — <span class="mono">vendor2 / vendor123</span><br>
+      Mode data saat ini: <b id="login-mode-label">Lokal (browser ini saja)</b>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app">
+  <div class="mobile-topbar">
+    <div class="flex items-center gap-8">
+      <div class="logo" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(145deg,var(--amber-500),var(--red-500));"></div>
+      <b style="font-size:14px;">SIGAP</b>
+    </div>
+    <button class="icon-btn" style="background:var(--navy-800);color:#fff;" onclick="Auth.logout()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2c-1 3-4 4.5-4 8.5A4 4 0 0 0 12 14.5a4 4 0 0 0 4-4C16 6.5 13 5 12 2Z" fill="#fff"/></svg>
+      </div>
+      <div><b>SIGAP</b><span>APAR & Hydrant</span></div>
+    </div>
+    <div id="nav-list"></div>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="sb-avatar">A</div>
+        <div><b id="sb-name">-</b><small id="sb-role">-</small></div>
+      </div>
+      <button class="logout-btn" onclick="Auth.logout()">Keluar</button>
+    </div>
+  </nav>
+
+  <div class="main-col">
+    <div class="topbar">
+      <div>
+        <h2 id="topbar-title">Dashboard</h2>
+        <div class="sub" id="topbar-sub">Ringkasan status pemeriksaan</div>
+      </div>
+      <div class="flex items-center gap-12">
+        <div class="period-picker">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="2" style="margin-left:6px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <select id="picker-month" onchange="App.onPeriodChange()"></select>
+          <select id="picker-year" onchange="App.onPeriodChange()"></select>
+        </div>
+      </div>
+    </div>
+    <div class="content" id="view-root"></div>
+  </div>
+
+  <div class="mobile-nav" id="mobile-nav-list"></div>
+
+  <button class="scan-fab no-print" id="scan-fab-btn" onclick="Scanner.open()" title="Scan barcode APAR/Hydrant">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+  </button>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- ================= MODAL: CHECKLIST PEMERIKSAAN ================= -->
+<div class="modal-overlay" id="modal-checklist">
+  <div class="modal-box wide">
+    <div class="modal-head">
+      <h3>Form Pemeriksaan</h3>
+      <button class="close-x" onclick="Modal.close('modal-checklist')">✕</button>
+    </div>
+    <div class="modal-body" id="checklist-modal-body"><!-- filled by JS --></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="Modal.close('modal-checklist')">Batal</button>
+      <button class="btn btn-primary" id="btn-submit-checklist" onclick="Checklist.submit()">Simpan Pemeriksaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: SCANNER ================= -->
+<div class="modal-overlay" id="modal-scanner">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Scan Barcode</h3>
+      <button class="close-x" onclick="Scanner.close()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="scanner-view"></div>
+      <p class="help-text text-center" style="margin-top:10px;">Arahkan kamera ke label barcode pada APAR / Hydrant. Pastikan izin kamera diaktifkan.</p>
+      <div class="field" style="margin-top:14px;">
+        <label>Atau masukkan kode manual</label>
+        <div class="flex gap-8">
+          <input type="text" id="manual-barcode-input" placeholder="mis. APAR-OB1-001">
+          <button class="btn btn-dark" onclick="Scanner.submitManual()">Cari</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: EDIT MAP ================= -->
+<div class="modal-overlay" id="modal-map">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modal-map-title">Edit Peta</h3>
+      <button class="close-x" onclick="Modal.close('modal-map')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="map-edit-id">
+      <div class="field">
+        <label>Nama Lokasi / Peta</label>
+        <input type="text" id="map-edit-name" placeholder="mis. OFFICE BUILDING LANTAI 1">
+      </div>
+      <div class="field">
+        <label>Gambar Denah / Layout</label>
+        <input type="file" id="map-edit-file" accept="image/*" onchange="Admin.previewMapImage(event)">
+        <div class="help-text">Upload foto/scan denah lokasi (JPG/PNG). Gambar ini jadi dasar peletakan titik APAR & Hydrant.</div>
+      </div>
+      <img id="map-edit-preview" style="margin-top:10px;border-radius:10px;border:1px solid var(--border);display:none;max-height:220px;object-fit:contain;">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="Modal.close('modal-map')">Batal</button>
+      <button class="btn btn-primary" onclick="Admin.saveMap()">Simpan Peta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: EDIT POINT (APAR/HYDRANT) ================= -->
+<div class="modal-overlay" id="modal-point">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modal-point-title">Detail Titik</h3>
+      <button class="close-x" onclick="Modal.close('modal-point')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="point-edit-id">
+      <input type="hidden" id="point-edit-x">
+      <input type="hidden" id="point-edit-y">
+      <div class="field">
+        <label>Lokasi Peta</label>
+        <select id="point-edit-map"></select>
+        <div class="help-text" id="point-pos-hint">Posisi belum diatur — akan diletakkan default di tengah peta, geser pin setelah disimpan.</div>
+      </div>
+      <div class="field">
+        <label>Jenis Alat</label>
+        <div class="tag-select" id="point-type-select">
+          <div class="tag-opt" data-val="APAR" onclick="Admin.selectPointType('APAR')">🧯 APAR</div>
+          <div class="tag-opt" data-val="HYDRANT_INDOOR" onclick="Admin.selectPointType('HYDRANT_INDOOR')">🚰 Hydrant Indoor</div>
+          <div class="tag-opt" data-val="HYDRANT_OUTDOOR" onclick="Admin.selectPointType('HYDRANT_OUTDOOR')">🚒 Hydrant Outdoor</div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Nomor Unit</label>
+          <input type="text" id="point-edit-number" placeholder="mis. 001">
+        </div>
+        <div class="field">
+          <label>Kode Barcode (unik)</label>
+          <div class="flex gap-8">
+            <input type="text" id="point-edit-barcode" placeholder="auto" class="mono">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="Admin.autoBarcode()">Auto</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Jenis / Spesifikasi (opsional)</label>
+        <input type="text" id="point-edit-jenis" placeholder="mis. YA-10X (DC) / Valve 1.5&quot;">
+      </div>
+      <div class="field">
+        <label>Keterangan Lokasi (opsional)</label>
+        <input type="text" id="point-edit-lokasi" placeholder="mis. Dekat pintu darurat lobi">
+      </div>
+      <div class="help-text">Posisi titik pada peta: geser langsung pin di peta setelah disimpan, atau klik ulang lokasi pada peta sebelum membuka form ini.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="btn-delete-point" onclick="Admin.deletePoint()">Hapus</button>
+      <button class="btn btn-ghost" onclick="Modal.close('modal-point')">Batal</button>
+      <button class="btn btn-primary" onclick="Admin.savePoint()">Simpan Titik</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: EDIT USER ================= -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modal-user-title">Tambah Pengguna</h3>
+      <button class="close-x" onclick="Modal.close('modal-user')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="user-edit-id">
+      <div class="field">
+        <label>Nama Lengkap</label>
+        <input type="text" id="user-edit-name" placeholder="mis. Budi Santoso">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="user-edit-username" placeholder="mis. vendor1">
+        </div>
+        <div class="field">
+          <label>Role</label>
+          <select id="user-edit-role">
+            <option value="admin">Admin</option>
+            <option value="vendor1">Vendor 1</option>
+            <option value="vendor2">Vendor 2</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Password <span class="muted" id="pw-hint">(kosongkan jika tidak diubah)</span></label>
+        <input type="password" id="user-edit-password" placeholder="••••••••">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="btn-delete-user" onclick="Admin.deleteUser()">Hapus</button>
+      <button class="btn btn-ghost" onclick="Modal.close('modal-user')">Batal</button>
+      <button class="btn btn-primary" onclick="Admin.saveUser()">Simpan Pengguna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: RECORD DETAIL (riwayat) ================= -->
+<div class="modal-overlay" id="modal-record-detail">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Detail Pemeriksaan</h3>
+      <button class="close-x" onclick="Modal.close('modal-record-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="record-detail-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="Modal.close('modal-record-detail')">Tutup</button>
+    </div>
+  </div>
+</div>
+<script>
+/* =====================================================================
+   SIGAP — APP CONFIG
+   Ubah bagian ini sesuai kebutuhan (nama perusahaan, koneksi backend, dst)
+===================================================================== */
+const APP_CONFIG = {
+  companyName: "NVDC Cibitung",
+  goLiveYear: 2026,
+  goLiveMonth: 8, // Agustus 2026 = mulai go-live. Sebelum bulan ini tidak ditampilkan.
+  // Isi dengan URL Web App Google Apps Script setelah deploy (lihat PANDUAN_SETUP.md).
+  // Kosongkan ("") untuk memakai mode LOKAL (localStorage browser ini saja, cocok utk uji coba).
+  gasWebAppUrl: "https://script.google.com/macros/s/AKfycbxcV_xS4EHDaPf5y9JgjHRB6yn_brFtSOnqrHSHAFB1OTUwWIs2agar9NsvK7S4mX_z/exec",
+};
+
+const MONTH_NAMES = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const MONTH_SHORT = ["","Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+
+// Master item checklist — diambil dari file Excel checksheet APAR & Hydrant Indoor/Outdoor
+const CHECKLIST_ITEMS = {
+  APAR: ["Tabung","Preasure Gauge","Head","Handle","Pin Pengaman","Segel Pin","Selang","Nozzle","Pengaman Nozzle","Clamp Selang"],
+  HYDRANT_INDOOR: ["Tanda Hydrant","Box Hydrant","Tombol Alarm","Lampu Indikator","Main Valve (1.5\")","Main Valve (2.5\")","Selang","Nozzle","Kondisi Pipa Hydrant","Visualisasi SOP"],
+  HYDRANT_OUTDOOR: ["Tanda Hydrant","Box Hydrant","Kunci Pillar","Kondisi Pillar","Coupler","Main Valve","Ball Valve","Selang","Nozzle","Kondisi Pipa Hydrant","Visualisasi SOP"],
+};
+const TYPE_LABEL = { APAR:"APAR", HYDRANT_INDOOR:"Hydrant Indoor", HYDRANT_OUTDOOR:"Hydrant Outdoor" };
+const TYPE_PREFIX = { APAR:"APAR", HYDRANT_INDOOR:"HYIN", HYDRANT_OUTDOOR:"HYOUT" };
+const TYPE_COLOR = { APAR:"#e5484d", HYDRANT_INDOOR:"#2b6cb0", HYDRANT_OUTDOOR:"#0d9488" };
+
+/* =====================================================================
+   DATA LAYER
+   Store.* dipakai di seluruh app. Ada 2 mode:
+   - 'local'  : simpan di localStorage browser (offline, demo, per-device)
+   - 'gas'    : simpan di Google Sheets via Google Apps Script Web App
+   Ganti APP_CONFIG.gasWebAppUrl utk pindah ke mode 'gas'. Lihat Code.gs.
+===================================================================== */
+const LS_KEY = "sigap_db_v1";
+
+function defaultDB(){
+  return {
+    users: [
+      // password default akan di-hash saat first run (lihat Store.init)
+      { id:"u_admin", username:"admin", name:"Administrator", role:"admin", passHash:null, _plain:"admin123" },
+      { id:"u_v1", username:"vendor1", name:"Vendor 1", role:"vendor1", passHash:null, _plain:"vendor123" },
+      { id:"u_v2", username:"vendor2", name:"Vendor 2", role:"vendor2", passHash:null, _plain:"vendor123" },
+    ],
+    maps: [
+      { id:"map_ob1", name:"OFFICE BUILDING LANTAI 1", image:"", order:1 },
+      { id:"map_ob2", name:"OFFICE BUILDING LANTAI 2", image:"", order:2 },
+      { id:"map_pio", name:"PIO BUILDING", image:"", order:3 },
+      { id:"map_yard", name:"YARD AREA", image:"", order:4 },
+    ],
+    points: [],
+    records: [],
+  };
+}
+
+async function sha256(text){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+const Store = {
+  mode: APP_CONFIG.gasWebAppUrl ? "gas" : "local",
+  _db: null,
+
+  async init(){
+    if(this.mode === "local"){
+      let raw = localStorage.getItem(LS_KEY);
+      if(!raw){
+        this._db = defaultDB();
+        for(const u of this._db.users){ u.passHash = await sha256(u._plain); delete u._plain; }
+        this._save();
+      } else {
+        this._db = JSON.parse(raw);
+      }
+    }
+    // mode 'gas' tidak butuh init lokal — data diambil per-request dari Apps Script
+  },
+  _save(){ localStorage.setItem(LS_KEY, JSON.stringify(this._db)); },
+
+  async _gas(action, payload){
+    const url = APP_CONFIG.gasWebAppUrl;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // hindari preflight CORS di Apps Script
+      body: JSON.stringify({ action, payload }),
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || "Gagal menghubungi server data");
+    return json.data;
+  },
+
+  // ---------- USERS ----------
+  async getUsers(){
+    if(this.mode==="local") return this._db.users;
+    return await this._gas("getUsers", {});
+  },
+  async login(username, password){
+    const hash = await sha256(password);
+    if(this.mode==="local"){
+      const u = this._db.users.find(x=>x.username===username && x.passHash===hash);
+      return u ? {...u, passHash:undefined} : null;
+    }
+    return await this._gas("login", { username, passHash: hash });
+  },
+  async saveUser(user){
+    if(user.password){ user.passHash = await sha256(user.password); }
+    delete user.password;
+    if(this.mode==="local"){
+      const idx = this._db.users.findIndex(u=>u.id===user.id);
+      if(idx>=0){ if(!user.passHash) user.passHash = this._db.users[idx].passHash; this._db.users[idx]={...this._db.users[idx], ...user}; }
+      else { user.id = "u_"+Date.now(); this._db.users.push(user); }
+      this._save();
+      return user;
+    }
+    return await this._gas("saveUser", user);
+  },
+  async deleteUser(id){
+    if(this.mode==="local"){ this._db.users = this._db.users.filter(u=>u.id!==id); this._save(); return true; }
+    return await this._gas("deleteUser", { id });
+  },
+
+  // ---------- MAPS ----------
+  async getMaps(){
+    if(this.mode==="local") return this._db.maps.sort((a,b)=>a.order-b.order);
+    return await this._gas("getMaps", {});
+  },
+  async saveMap(map){
+    if(this.mode==="local"){
+      const idx = this._db.maps.findIndex(m=>m.id===map.id);
+      if(idx>=0) this._db.maps[idx] = {...this._db.maps[idx], ...map};
+      else { map.id = "map_"+Date.now(); map.order = this._db.maps.length+1; this._db.maps.push(map); }
+      this._save();
+      return map;
+    }
+    return await this._gas("saveMap", map);
+  },
+
+  // ---------- POINTS ----------
+  async getPoints(){
+    if(this.mode==="local") return this._db.points;
+    return await this._gas("getPoints", {});
+  },
+  async savePoint(point){
+    if(this.mode==="local"){
+      const idx = this._db.points.findIndex(p=>p.id===point.id);
+      if(idx>=0) this._db.points[idx] = {...this._db.points[idx], ...point};
+      else { point.id = "pt_"+Date.now()+"_"+Math.floor(Math.random()*1000); this._db.points.push(point); }
+      this._save();
+      return point;
+    }
+    return await this._gas("savePoint", point);
+  },
+  async deletePoint(id){
+    if(this.mode==="local"){
+      this._db.points = this._db.points.filter(p=>p.id!==id);
+      this._db.records = this._db.records.filter(r=>r.pointId!==id);
+      this._save();
+      return true;
+    }
+    return await this._gas("deletePoint", { id });
+  },
+
+  // ---------- IMAGES (disimpan ke Google Drive saat mode 'gas') ----------
+  async uploadImage(dataUrl){
+    if(this.mode==="local") return dataUrl; // base64 langsung, tersimpan di localStorage
+    const { url } = await this._gas("uploadImage", { dataUrl });
+    return url;
+  },
+
+  // ---------- RECORDS ----------
+  async getRecords(){
+    if(this.mode==="local") return this._db.records;
+    return await this._gas("getRecords", {});
+  },
+  async saveRecord(record){
+    if(this.mode==="local"){
+      // satu record per (pointId, year, month) — replace kalau sudah pernah diisi bulan ini
+      const idx = this._db.records.findIndex(r=>r.pointId===record.pointId && r.year===record.year && r.month===record.month);
+      record.id = idx>=0 ? this._db.records[idx].id : "rec_"+Date.now();
+      record.timestamp = new Date().toISOString();
+      if(idx>=0) this._db.records[idx] = record; else this._db.records.push(record);
+      this._save();
+      return record;
+    }
+    return await this._gas("saveRecord", record);
+  },
+};
+</script>
+<script>
+/* =====================================================================
+   HELPERS
+===================================================================== */
+function toast(msg, type="default"){
+  const wrap = document.getElementById("toast-wrap");
+  const el = document.createElement("div");
+  el.className = "toast "+(type==="success"?"success":type==="error"?"error":"");
+  el.innerHTML = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .3s"; setTimeout(()=>el.remove(),300); }, 3200);
+}
+function escapeHtml(str){
+  if(str===undefined||str===null) return "";
+  return String(str).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = ()=>resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+function iconFor(type){
+  if(type==="APAR"){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v3"/><path d="M9 5h6l1 3H8l1-3Z" fill="#fff" stroke="none"/><path d="M9 8v3a3 3 0 0 0 3 3 3 3 0 0 0 3-3V8"/><path d="M12 14v8"/><path d="M8 22h8"/><path d="M5 11h2"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1"/><path d="M9 8v3H5l2 4"/><path d="M15 8v3h4l-2 4"/><path d="M12 15v6"/><path d="M9 21h6"/></svg>';
+}
+function statusOf(pointId, records, year, month){
+  const rec = records.find(r=>r.pointId===pointId && r.year===year && r.month===month);
+  if(!rec) return "red";
+  const hasBad = (rec.items||[]).some(it=>it.status==="R");
+  return hasBad ? "orange" : "green";
+}
+const Modal = {
+  open(id){ document.getElementById(id).classList.add("active"); },
+  close(id){ document.getElementById(id).classList.remove("active"); },
+};
+
+/* =====================================================================
+   AUTH
+===================================================================== */
+const SESSION_KEY = "sigap_session_v1";
+const Auth = {
+  current: null,
+  async tryLogin(username, password){
+    const user = await Store.login(username, password);
+    if(!user){ return false; }
+    this.current = user;
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    return true;
+  },
+  restore(){
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if(raw){ this.current = JSON.parse(raw); return true; }
+    return false;
+  },
+  logout(){
+    sessionStorage.removeItem(SESSION_KEY);
+    this.current = null;
+    location.reload();
+  },
+  isAdmin(){ return this.current && this.current.role === "admin"; },
+};
+
+document.getElementById("login-form").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const u = document.getElementById("login-username").value.trim();
+  const p = document.getElementById("login-password").value;
+  const errBox = document.getElementById("login-error");
+  errBox.classList.add("hidden");
+  const btn = e.target.querySelector("button");
+  btn.disabled = true; btn.textContent = "Memeriksa...";
+  try{
+    const ok = await Auth.tryLogin(u, p);
+    if(ok){ boot(); }
+    else { errBox.textContent = "Username atau password salah."; errBox.classList.remove("hidden"); }
+  }catch(err){
+    errBox.textContent = "Gagal terhubung ke server data: "+err.message;
+    errBox.classList.remove("hidden");
+  }finally{
+    btn.disabled = false; btn.textContent = "Masuk";
+  }
+});
+</script>
+<script>
+/* =====================================================================
+   APP CORE — routing, period picker, nav
+===================================================================== */
+const NAV_ITEMS = [
+  { id:"dashboard", label:"Dashboard", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>' },
+  { id:"map", label:"Peta Lokasi", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>' },
+  { id:"report", label:"Riwayat & Laporan", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>' },
+  { id:"admin-maps", label:"Kelola Peta", roles:["admin"], section:"Pengaturan Admin", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/></svg>' },
+  { id:"admin-points", label:"Kelola Titik APAR/Hydrant", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' },
+  { id:"admin-barcode", label:"Cetak Label Barcode", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="10" y1="5" x2="10" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/><line x1="18" y1="5" x2="18" y2="19"/></svg>' },
+  { id:"admin-users", label:"Kelola Pengguna", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+  { id:"admin-connection", label:"Koneksi Data", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9a9 9 0 0 1 14.7-3M20 15a9 9 0 0 1-14.7 3"/><polyline points="16 3 20 3 20 7"/><polyline points="8 21 4 21 4 17"/></svg>' },
+];
+
+const App = {
+  view: "dashboard",
+  period: { year: APP_CONFIG.goLiveYear, month: APP_CONFIG.goLiveMonth },
+  maps: [], points: [], records: [], users: [],
+  activeMapId: null,
+
+  async loadAll(){
+    [this.maps, this.points, this.records] = await Promise.all([Store.getMaps(), Store.getPoints(), Store.getRecords()]);
+    if(Auth.isAdmin()) this.users = await Store.getUsers();
+  },
+
+  buildPeriodOptions(){
+    const yearSel = document.getElementById("picker-year");
+    const monthSel = document.getElementById("picker-month");
+    const thisYear = new Date().getFullYear();
+    const maxYear = Math.max(thisYear, APP_CONFIG.goLiveYear) + 3;
+    yearSel.innerHTML = "";
+    for(let y=APP_CONFIG.goLiveYear; y<=maxYear; y++){
+      yearSel.innerHTML += `<option value="${y}" ${y===this.period.year?"selected":""}>${y}</option>`;
+    }
+    this.refreshMonthOptions();
+  },
+  refreshMonthOptions(){
+    const year = parseInt(document.getElementById("picker-year").value || this.period.year);
+    const monthSel = document.getElementById("picker-month");
+    const startMonth = (year === APP_CONFIG.goLiveYear) ? APP_CONFIG.goLiveMonth : 1;
+    let html = "";
+    for(let m=startMonth; m<=12; m++){
+      html += `<option value="${m}" ${m===this.period.month?"selected":""}>${MONTH_NAMES[m]}</option>`;
+    }
+    monthSel.innerHTML = html;
+    if(!Array.from(monthSel.options).some(o=>parseInt(o.value)===this.period.month)){
+      this.period.month = startMonth;
+    }
+  },
+  onPeriodChange(){
+    this.period.year = parseInt(document.getElementById("picker-year").value);
+    this.refreshMonthOptions();
+    this.period.month = parseInt(document.getElementById("picker-month").value);
+    this.render();
+  },
+
+  renderNav(){
+    const role = Auth.current.role;
+    const items = NAV_ITEMS.filter(n=>n.roles.includes(role));
+    let html = "", lastSection = null;
+    for(const item of items){
+      if(item.section && item.section !== lastSection){
+        html += `<div class="nav-section-label">${item.section}</div>`;
+        lastSection = item.section;
+      }
+      html += `<div class="nav-item ${this.view===item.id?"active":""}" onclick="App.go('${item.id}')">${item.icon}<span>${item.label}</span></div>`;
+    }
+    document.getElementById("nav-list").innerHTML = html;
+    // mobile nav: dashboard, map, report, +settings(admin) only, max 4
+    const mobileItems = items.filter(i=>["dashboard","map","report"].includes(i.id));
+    if(role==="admin") mobileItems.push({id:"admin-points",label:"Admin",icon:NAV_ITEMS.find(n=>n.id==="admin-points").icon});
+    document.getElementById("mobile-nav-list").innerHTML = mobileItems.map(item=>
+      `<div class="nav-item ${this.view===item.id?"active":""}" onclick="App.go('${item.id}')">${item.icon}<span>${item.label.split(" ")[0]}</span></div>`
+    ).join("");
+  },
+
+  go(viewId){
+    this.view = viewId;
+    this.render();
+  },
+
+  titleFor(viewId){
+    const map = { dashboard:["Dashboard","Ringkasan status pemeriksaan bulan berjalan"],
+      map:["Peta Lokasi","Pilih lokasi untuk melihat posisi & status APAR/Hydrant"],
+      report:["Riwayat & Laporan","Rekap seluruh hasil pemeriksaan"],
+      "admin-maps":["Kelola Peta","Upload & atur denah lokasi"],
+      "admin-points":["Kelola Titik APAR/Hydrant","Tempatkan & atur data setiap unit"],
+      "admin-barcode":["Cetak Label Barcode","Cetak label untuk ditempel di unit fisik"],
+      "admin-users":["Kelola Pengguna","Atur akun admin & vendor"],
+      "admin-connection":["Koneksi Data","Hubungkan ke Google Sheets (opsional)"] };
+    return map[viewId] || ["SIGAP",""];
+  },
+
+  async render(){
+    this.renderNav();
+    const [title, sub] = this.titleFor(this.view);
+    document.getElementById("topbar-title").textContent = title;
+    document.getElementById("topbar-sub").textContent = sub;
+    document.getElementById("sb-name").textContent = Auth.current.name;
+    document.getElementById("sb-role").textContent = Auth.current.role;
+    document.getElementById("sb-avatar").textContent = Auth.current.name.charAt(0).toUpperCase();
+
+    await this.loadAll();
+    const root = document.getElementById("view-root");
+    if(this.view==="dashboard") root.innerHTML = Views.dashboard();
+    else if(this.view==="map") root.innerHTML = Views.mapList();
+    else if(this.view==="mapdetail") root.innerHTML = Views.mapDetail(this.activeMapId);
+    else if(this.view==="report") root.innerHTML = Views.report();
+    else if(this.view==="admin-maps") root.innerHTML = Views.adminMaps();
+    else if(this.view==="admin-points") root.innerHTML = Views.adminPoints();
+    else if(this.view==="admin-barcode") root.innerHTML = Views.adminBarcode();
+    else if(this.view==="admin-users") root.innerHTML = Views.adminUsers();
+    else if(this.view==="admin-connection") root.innerHTML = Views.adminConnection();
+    if(this.view==="mapdetail") MapViewer.afterRender();
+    if(this.view==="admin-barcode") Barcode.afterRender();
+  },
+
+  openMap(mapId){ this.activeMapId = mapId; this.view = "mapdetail"; this.render(); },
+};
+
+async function boot(){
+  await Store.init();
+  document.getElementById("login-mode-label").textContent = Store.mode==="gas" ? "Google Sheets (online)" : "Lokal (browser ini saja)";
+  if(Auth.restore()){
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").classList.add("active");
+    await App.render();
+    App.buildPeriodOptions();
+    App.render();
+  }
+}
+</script>
+<script>
+/* =====================================================================
+   VIEWS — HTML generators untuk setiap halaman
+===================================================================== */
+const Views = {
+
+  dashboard(){
+    const { year, month } = App.period;
+    const points = App.points;
+    const total = points.length;
+    let done=0, danger=0;
+    for(const p of points){
+      const s = statusOf(p.id, App.records, year, month);
+      if(s==="green") done++;
+      else if(s==="orange"){ done++; danger++; }
+    }
+    const belum = total - done;
+    const pct = total ? Math.round((done/total)*100) : 0;
+
+    const cards = App.maps.map(m=>{
+      const mPoints = points.filter(p=>p.mapId===m.id);
+      const mDone = mPoints.filter(p=>statusOf(p.id,App.records,year,month)!=="red").length;
+      const mPct = mPoints.length ? Math.round((mDone/mPoints.length)*100) : 0;
+      const thumbStyle = m.image ? `background-image:url('${m.image}')` : "";
+      return `
+      <div class="map-card" onclick="App.openMap('${m.id}')">
+        <div class="thumb" style="${thumbStyle}">
+          ${!m.image?"Belum ada denah":""}
+          <div class="badge-count">${mPoints.length} titik</div>
+        </div>
+        <div class="body">
+          <h3>${escapeHtml(m.name)}</h3>
+          <div class="progress-bar"><div style="width:${mPct}%"></div></div>
+          <div class="prog-lbl"><span>${mDone}/${mPoints.length} sudah dicek</span><span>${mPct}%</span></div>
+        </div>
+      </div>`;
+    }).join("");
+
+    return `
+    <div class="stat-row">
+      <div class="stat-card"><div class="num">${total}</div><div class="lbl">Total Unit Terdaftar</div></div>
+      <div class="stat-card green"><div class="num">${done}</div><div class="lbl">Sudah Dicek — ${MONTH_NAMES[month]} ${year}</div></div>
+      <div class="stat-card red"><div class="num">${belum}</div><div class="lbl">Belum Dicek</div></div>
+      <div class="stat-card orange"><div class="num">${danger}</div><div class="lbl">Perlu Perhatian (Rusak)</div></div>
+    </div>
+    <div class="flex justify-between items-center" style="margin-bottom:12px;">
+      <h3 style="margin:0;font-size:15.5px;">Progres per Lokasi</h3>
+      <span class="mono muted" style="font-size:12px;">${pct}% keseluruhan</span>
+    </div>
+    ${total===0 ? `<div class="empty-state">Belum ada titik APAR/Hydrant terdaftar.${Auth.isAdmin()?' Buka <b>Kelola Titik</b> untuk mulai menambahkan.':''}</div>` : `<div class="map-grid">${cards}</div>`}
+    `;
+  },
+
+  mapList(){
+    const cards = App.maps.map(m=>{
+      const thumbStyle = m.image ? `background-image:url('${m.image}')` : "";
+      const cnt = App.points.filter(p=>p.mapId===m.id).length;
+      return `
+      <div class="map-card" onclick="App.openMap('${m.id}')">
+        <div class="thumb" style="${thumbStyle}">${!m.image?"Belum ada denah":""}<div class="badge-count">${cnt} titik</div></div>
+        <div class="body"><h3>${escapeHtml(m.name)}</h3><div class="muted" style="font-size:12.5px;">Klik untuk lihat peta & status</div></div>
+      </div>`;
+    }).join("");
+    return `<div class="map-grid">${cards}</div>`;
+  },
+
+  mapDetail(mapId){
+    const map = App.maps.find(m=>m.id===mapId);
+    if(!map) return `<div class="empty-state">Peta tidak ditemukan.</div>`;
+    const { year, month } = App.period;
+    const points = App.points.filter(p=>p.mapId===mapId);
+    let redC=0, greenC=0, orangeC=0;
+    const pins = points.map(p=>{
+      const s = statusOf(p.id, App.records, year, month);
+      if(s==="red") redC++; else if(s==="green") greenC++; else orangeC++;
+      return `<div class="pin status-${s}" style="left:${p.x}%;top:${p.y}%;" data-point-id="${p.id}" onclick="Checklist.openFor('${p.id}')" title="${escapeHtml(TYPE_LABEL[p.type])} #${escapeHtml(p.number)}">
+        <div class="pin-icon" style="background:${s==='red'?'var(--red-500)':s==='green'?'var(--green-500)':'var(--orange-500)'}">${iconFor(p.type)}</div>
+        <div class="pin-label">${escapeHtml(p.number)}</div>
+      </div>`;
+    }).join("");
+
+    const adminTools = Auth.isAdmin() ? `
+      <button class="btn btn-dark btn-sm" onclick="Admin.togglePlaceMode()" id="btn-place-mode">+ Tambah Titik di Peta</button>
+      <button class="btn btn-ghost btn-sm" onclick="App.go('admin-maps')">Ganti Denah</button>
+    ` : "";
+
+    return `
+    <div class="mapview-toolbar">
+      <button class="btn btn-ghost btn-sm" onclick="App.go('map')">← Semua Peta</button>
+      <div class="legend">
+        <span><i style="background:var(--red-500)"></i>Belum dicek (${redC})</span>
+        <span><i style="background:var(--orange-500)"></i>Perlu perhatian (${orangeC})</span>
+        <span><i style="background:var(--green-500)"></i>Sudah dicek (${greenC})</span>
+      </div>
+      <div class="flex gap-8">${adminTools}</div>
+    </div>
+    <div id="map-place-hint" class="map-place-hint hidden">
+      <span>📍 Mode tambah titik aktif — klik lokasi pada peta untuk menempatkan APAR/Hydrant baru.</span>
+      <button class="btn btn-ghost btn-sm" onclick="Admin.togglePlaceMode()">Selesai</button>
+    </div>
+    <div class="map-canvas-wrap">
+      ${map.image ? `
+      <div class="map-canvas" id="map-canvas">
+        <img src="${map.image}" id="map-img" draggable="false">
+        ${pins}
+      </div>` : `<div class="map-empty">Denah belum diupload.${Auth.isAdmin()?' Buka <b>Kelola Peta</b> untuk mengupload gambar denah lokasi ini.':' Hubungi admin untuk mengupload denah.'}</div>`}
+    </div>
+    `;
+  },
+
+  report(){
+    const typeOptions = Object.keys(TYPE_LABEL).map(t=>`<option value="${t}">${TYPE_LABEL[t]}</option>`).join("");
+    const mapOptions = App.maps.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join("");
+    return `
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3>Rekap Pemeriksaan — ${MONTH_NAMES[App.period.month]} ${App.period.year}</h3>
+          <p>Riwayat ini menggantikan arsip kertas checksheet bulanan.</p>
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-ghost btn-sm" onclick="Report.exportCsv()">⬇ Export CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Cetak</button>
+        </div>
+      </div>
+      <div class="flex gap-8" style="margin-bottom:14px;flex-wrap:wrap;">
+        <select id="filter-map" class="field-inline" onchange="Report.refreshTable()" style="padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);"><option value="">Semua Lokasi</option>${mapOptions}</select>
+        <select id="filter-type" onchange="Report.refreshTable()" style="padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);"><option value="">Semua Jenis</option>${typeOptions}</select>
+        <select id="filter-status" onchange="Report.refreshTable()" style="padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);">
+          <option value="">Semua Status</option><option value="green">Sudah Dicek</option><option value="orange">Perlu Perhatian</option><option value="red">Belum Dicek</option>
+        </select>
+      </div>
+      <div id="report-table-wrap"></div>
+    </div>`;
+  },
+
+  adminMaps(){
+    const rows = App.maps.map(m=>`
+      <div class="card" style="display:flex;gap:16px;align-items:center;">
+        <div style="width:110px;height:74px;border-radius:8px;background:${m.image?`url('${m.image}') center/cover`:"#eef0f2"};flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-500);font-size:10px;text-align:center;">${!m.image?"Belum ada gambar":""}</div>
+        <div style="flex:1;">
+          <b>${escapeHtml(m.name)}</b>
+          <div class="muted" style="font-size:12.5px;">${App.points.filter(p=>p.mapId===m.id).length} titik terdaftar</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="Admin.editMap('${m.id}')">Ubah Denah / Nama</button>
+        <button class="btn btn-dark btn-sm" onclick="App.openMap('${m.id}')">Lihat Peta</button>
+      </div>`).join("");
+    return `<p class="help-text" style="margin-bottom:14px;">4 lokasi peta sudah disiapkan sesuai area Anda. Upload gambar denah (foto/scan layout) untuk masing-masing, lalu atur titik di menu <b>Kelola Titik</b>.</p>${rows}`;
+  },
+
+  adminPoints(){
+    const mapName = id => App.maps.find(m=>m.id===id)?.name || "-";
+    const rows = App.points.map(p=>`
+      <tr>
+        <td><span class="badge gray">${TYPE_LABEL[p.type]}</span></td>
+        <td><b>${escapeHtml(p.number)}</b></td>
+        <td class="mono">${escapeHtml(p.barcode)}</td>
+        <td>${escapeHtml(mapName(p.mapId))}</td>
+        <td class="muted">${escapeHtml(p.lokasi||"-")}</td>
+        <td style="text-align:right;">
+          <button class="icon-btn" onclick="Admin.editPoint('${p.id}')" title="Ubah">✎</button>
+          <button class="icon-btn danger" onclick="Admin.editPoint('${p.id}');" title="Ubah / Hapus">⋯</button>
+        </td>
+      </tr>`).join("");
+    return `
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Semua Titik APAR & Hydrant</h3><p>Total ${App.points.length} unit terdaftar di 4 lokasi.</p></div>
+        <button class="btn btn-primary btn-sm" onclick="Admin.newPointFromTable()">+ Tambah Titik</button>
+      </div>
+      ${App.points.length===0 ? `<div class="empty-state">Belum ada titik. Tambahkan lewat tombol di atas, atau buka <b>Peta Lokasi</b> → pilih peta → "Tambah Titik di Peta" untuk menempatkan langsung sesuai posisi aslinya.</div>` : `
+      <div style="overflow-x:auto;"><table><thead><tr><th>Jenis</th><th>No. Unit</th><th>Barcode</th><th>Lokasi Peta</th><th>Keterangan</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
+    </div>`;
+  },
+
+  adminBarcode(){
+    const mapName = id => App.maps.find(m=>m.id===id)?.name || "-";
+    const cards = App.points.map(p=>`
+      <div class="barcode-card">
+        <h4>${TYPE_LABEL[p.type]} #${escapeHtml(p.number)}</h4>
+        <div class="loc">${escapeHtml(mapName(p.mapId))}</div>
+        <svg class="barcode-svg" data-code="${escapeHtml(p.barcode)}"></svg>
+      </div>`).join("");
+    return `
+    <div class="card no-print">
+      <div class="card-head">
+        <div><h3>Cetak Label Barcode</h3><p>Cetak lalu tempel/laminating label ini pada tiap APAR & Hydrant fisik untuk discan petugas.</p></div>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨 Cetak Semua Label</button>
+      </div>
+    </div>
+    ${App.points.length===0 ? `<div class="empty-state">Belum ada titik terdaftar.</div>` : `<div class="barcode-print-grid" id="barcode-grid">${cards}</div>`}
+    `;
+  },
+
+  adminUsers(){
+    const rows = App.users.map(u=>`
+      <tr>
+        <td><b>${escapeHtml(u.name)}</b></td>
+        <td class="mono">${escapeHtml(u.username)}</td>
+        <td><span class="badge ${u.role==='admin'?'orange':'gray'}">${u.role}</span></td>
+        <td style="text-align:right;"><button class="icon-btn" onclick="Admin.editUser('${u.id}')">✎</button></td>
+      </tr>`).join("");
+    return `
+    <div class="card">
+      <div class="card-head">
+        <div><h3>Pengguna Sistem</h3><p>Anda (admin), Vendor 1, dan Vendor 2 dapat login dan mengisi checklist. Hanya admin yang bisa mengubah pengaturan.</p></div>
+        <button class="btn btn-primary btn-sm" onclick="Admin.newUser()">+ Tambah Pengguna</button>
+      </div>
+      <table><thead><tr><th>Nama</th><th>Username</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    </div>`;
+  },
+
+  adminConnection(){
+    return `
+    <div class="card">
+      <h3>Status Koneksi Data</h3>
+      <p class="help-text" style="margin-bottom:16px;">
+        Mode saat ini: <b>${Store.mode==="gas"?"Google Sheets (online, bisa diakses semua vendor)":"Lokal (localStorage browser ini saja — hanya untuk uji coba)"}</b>
+      </p>
+      <div class="field">
+        <label>URL Web App Google Apps Script</label>
+        <input type="text" id="gas-url-input" value="${APP_CONFIG.gasWebAppUrl}" placeholder="https://script.google.com/macros/s/xxxx/exec">
+        <div class="help-text">Isi setelah deploy Code.gs sebagai Web App (lihat PANDUAN_SETUP.md). Setelah diisi, edit langsung nilai <code class="mono">APP_CONFIG.gasWebAppUrl</code> di bagian atas file HTML ini di VSCode, lalu simpan &amp; muat ulang — pengaturan tidak tersimpan otomatis dari sini karena ini bukan mode online.</div>
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-ghost btn-sm" onclick="Admin.copyGasUrl()">Salin nilai untuk ditempel di kode</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Kenapa Google Sheets / Drive?</h3>
+      <p class="help-text">Menyimpan data di Google Sheets (via Google Apps Script Web App) memastikan Anda dan kedua vendor bisa mengakses data yang sama dari perangkat masing-masing tanpa batasan akses seperti OneDrive. Gambar denah & foto disimpan otomatis ke folder Google Drive. Panduan lengkap penyiapan ada di file <b>PANDUAN_SETUP.md</b> &amp; <b>Code.gs</b> yang disertakan.</p>
+    </div>`;
+  },
+};
+</script>
+<script>
+/* =====================================================================
+   MAP VIEWER — render pin, klik utk isi checklist, mode tambah titik admin
+===================================================================== */
+const MapViewer = {
+  placing: false,
+  afterRender(){
+    const canvas = document.getElementById("map-canvas");
+    if(!canvas) return;
+    canvas.addEventListener("click", (e)=>{
+      if(!MapViewer.placing) return;
+      if(e.target.closest(".pin")) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      Admin.openNewPointAt(App.activeMapId, x.toFixed(2), y.toFixed(2));
+    });
+    // drag-to-reposition pin (admin only, not while in placing mode)
+    if(Auth.isAdmin()){
+      canvas.querySelectorAll(".pin").forEach(pinEl=>{
+        pinEl.addEventListener("mousedown", (e)=>{
+          if(MapViewer.placing) return;
+          e.preventDefault(); e.stopPropagation();
+          MapViewer.startDrag(pinEl, canvas);
+        });
+      });
+    }
+  },
+  startDrag(pinEl, canvas){
+    let moved = false;
+    function onMove(ev){
+      moved = true;
+      const rect = canvas.getBoundingClientRect();
+      let x = ((ev.clientX - rect.left) / rect.width) * 100;
+      let y = ((ev.clientY - rect.top) / rect.height) * 100;
+      x = Math.max(0, Math.min(100, x)); y = Math.max(0, Math.min(100, y));
+      pinEl.style.left = x+"%"; pinEl.style.top = y+"%";
+      pinEl.dataset.newX = x; pinEl.dataset.newY = y;
+    }
+    async function onUp(){
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      if(moved && pinEl.dataset.newX){
+        const pointId = pinEl.dataset.pointId;
+        const point = App.points.find(p=>p.id===pointId);
+        point.x = parseFloat(pinEl.dataset.newX); point.y = parseFloat(pinEl.dataset.newY);
+        await Store.savePoint({ id: point.id, x: point.x, y: point.y });
+        toast("Posisi titik diperbarui", "success");
+      }
+    }
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  },
+};
+
+/* =====================================================================
+   ADMIN — kelola peta, titik, pengguna
+===================================================================== */
+const Admin = {
+  _mapImageData: null,
+  _pendingPointType: null,
+
+  togglePlaceMode(){
+    MapViewer.placing = !MapViewer.placing;
+    document.getElementById("map-place-hint").classList.toggle("hidden", !MapViewer.placing);
+    const btn = document.getElementById("btn-place-mode");
+    if(btn) btn.textContent = MapViewer.placing ? "Batalkan Mode Tambah" : "+ Tambah Titik di Peta";
+  },
+
+  // ---- MAP ----
+  editMap(id){
+    const m = App.maps.find(x=>x.id===id);
+    document.getElementById("modal-map-title").textContent = "Ubah "+m.name;
+    document.getElementById("map-edit-id").value = m.id;
+    document.getElementById("map-edit-name").value = m.name;
+    const prev = document.getElementById("map-edit-preview");
+    if(m.image){ prev.src = m.image; prev.style.display="block"; } else { prev.style.display="none"; }
+    this._mapImageData = m.image || "";
+    Modal.open("modal-map");
+  },
+  async previewMapImage(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const dataUrl = await fileToBase64(file);
+    this._mapImageData = dataUrl;
+    const prev = document.getElementById("map-edit-preview");
+    prev.src = dataUrl; prev.style.display = "block";
+  },
+  async saveMap(){
+    const id = document.getElementById("map-edit-id").value;
+    const name = document.getElementById("map-edit-name").value.trim();
+    if(!name){ toast("Nama lokasi wajib diisi", "error"); return; }
+    let image = this._mapImageData;
+    if(image && image.startsWith("data:") && Store.mode==="gas"){
+      image = await Store.uploadImage(image);
+    }
+    await Store.saveMap({ id, name, image });
+    Modal.close("modal-map");
+    toast("Peta tersimpan", "success");
+    App.render();
+  },
+
+  // ---- POINT ----
+  openNewPointAt(mapId, x, y){
+    document.getElementById("modal-point-title").textContent = "Tambah Titik Baru";
+    document.getElementById("point-edit-id").value = "";
+    document.getElementById("point-edit-x").value = x;
+    document.getElementById("point-edit-y").value = y;
+    document.getElementById("point-edit-number").value = "";
+    document.getElementById("point-edit-barcode").value = "";
+    document.getElementById("point-edit-jenis").value = "";
+    document.getElementById("point-edit-lokasi").value = "";
+    document.getElementById("point-pos-hint").textContent = "Posisi diambil dari klik terakhir Anda di peta.";
+    document.getElementById("btn-delete-point").classList.add("hidden");
+    this.fillMapSelect(mapId);
+    this.selectPointType("APAR");
+    Modal.open("modal-point");
+  },
+  newPointFromTable(){
+    document.getElementById("modal-point-title").textContent = "Tambah Titik Baru";
+    document.getElementById("point-edit-id").value = "";
+    document.getElementById("point-edit-x").value = 50;
+    document.getElementById("point-edit-y").value = 50;
+    document.getElementById("point-edit-number").value = "";
+    document.getElementById("point-edit-barcode").value = "";
+    document.getElementById("point-edit-jenis").value = "";
+    document.getElementById("point-edit-lokasi").value = "";
+    document.getElementById("point-pos-hint").textContent = "Posisi default tengah peta — buka Peta Lokasi untuk menggeser pin ke posisi asli.";
+    document.getElementById("btn-delete-point").classList.add("hidden");
+    this.fillMapSelect(App.maps[0]?.id);
+    this.selectPointType("APAR");
+    Modal.open("modal-point");
+  },
+  fillMapSelect(selectedId){
+    const sel = document.getElementById("point-edit-map");
+    sel.innerHTML = App.maps.map(m=>`<option value="${m.id}" ${m.id===selectedId?"selected":""}>${escapeHtml(m.name)}</option>`).join("");
+  },
+  editPoint(id){
+    const p = App.points.find(x=>x.id===id);
+    document.getElementById("modal-point-title").textContent = "Ubah Titik — "+TYPE_LABEL[p.type]+" #"+p.number;
+    document.getElementById("point-edit-id").value = p.id;
+    document.getElementById("point-edit-x").value = p.x;
+    document.getElementById("point-edit-y").value = p.y;
+    document.getElementById("point-edit-number").value = p.number;
+    document.getElementById("point-edit-barcode").value = p.barcode;
+    document.getElementById("point-edit-jenis").value = p.jenis||"";
+    document.getElementById("point-edit-lokasi").value = p.lokasi||"";
+    document.getElementById("point-pos-hint").textContent = "Geser pin langsung di peta untuk mengubah posisi.";
+    document.getElementById("btn-delete-point").classList.remove("hidden");
+    this.fillMapSelect(p.mapId);
+    this.selectPointType(p.type);
+    Modal.open("modal-point");
+  },
+  selectPointType(type){
+    this._pendingPointType = type;
+    document.querySelectorAll("#point-type-select .tag-opt").forEach(el=>{
+      el.classList.toggle("active", el.dataset.val===type);
+    });
+  },
+  autoBarcode(){
+    const type = this._pendingPointType || "APAR";
+    const num = document.getElementById("point-edit-number").value.trim() || String(App.points.length+1).padStart(3,"0");
+    const mapId = document.getElementById("point-edit-map").value;
+    const mapCode = (App.maps.find(m=>m.id===mapId)?.name || "LOC").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,4);
+    document.getElementById("point-edit-barcode").value = `${TYPE_PREFIX[type]}-${mapCode}-${num.padStart(3,"0")}`;
+  },
+  async savePoint(){
+    const number = document.getElementById("point-edit-number").value.trim();
+    let barcode = document.getElementById("point-edit-barcode").value.trim();
+    const mapId = document.getElementById("point-edit-map").value;
+    if(!number){ toast("Nomor unit wajib diisi", "error"); return; }
+    if(!barcode){ this.autoBarcode(); barcode = document.getElementById("point-edit-barcode").value; }
+    const dup = App.points.find(p=>p.barcode===barcode && p.id!==document.getElementById("point-edit-id").value);
+    if(dup){ toast("Kode barcode sudah dipakai titik lain, gunakan kode unik", "error"); return; }
+    const point = {
+      id: document.getElementById("point-edit-id").value,
+      mapId,
+      type: this._pendingPointType || "APAR",
+      number, barcode,
+      jenis: document.getElementById("point-edit-jenis").value.trim(),
+      lokasi: document.getElementById("point-edit-lokasi").value.trim(),
+      x: parseFloat(document.getElementById("point-edit-x").value) || 50,
+      y: parseFloat(document.getElementById("point-edit-y").value) || 50,
+    };
+    await Store.savePoint(point);
+    Modal.close("modal-point");
+    toast("Titik tersimpan", "success");
+    if(MapViewer.placing) this.togglePlaceMode();
+    App.render();
+  },
+  async deletePoint(){
+    const id = document.getElementById("point-edit-id").value;
+    if(!id) return;
+    if(!confirm("Hapus titik ini beserta seluruh riwayat pemeriksaannya?")) return;
+    await Store.deletePoint(id);
+    Modal.close("modal-point");
+    toast("Titik dihapus", "success");
+    App.render();
+  },
+
+  // ---- USERS ----
+  newUser(){
+    document.getElementById("modal-user-title").textContent = "Tambah Pengguna";
+    document.getElementById("user-edit-id").value = "";
+    document.getElementById("user-edit-name").value = "";
+    document.getElementById("user-edit-username").value = "";
+    document.getElementById("user-edit-role").value = "vendor1";
+    document.getElementById("user-edit-password").value = "";
+    document.getElementById("pw-hint").textContent = "";
+    document.getElementById("btn-delete-user").classList.add("hidden");
+    Modal.open("modal-user");
+  },
+  editUser(id){
+    const u = App.users.find(x=>x.id===id);
+    document.getElementById("modal-user-title").textContent = "Ubah Pengguna";
+    document.getElementById("user-edit-id").value = u.id;
+    document.getElementById("user-edit-name").value = u.name;
+    document.getElementById("user-edit-username").value = u.username;
+    document.getElementById("user-edit-role").value = u.role;
+    document.getElementById("user-edit-password").value = "";
+    document.getElementById("pw-hint").textContent = "(kosongkan jika tidak diubah)";
+    document.getElementById("btn-delete-user").classList.toggle("hidden", u.id==="u_admin");
+    Modal.open("modal-user");
+  },
+  async saveUser(){
+    const name = document.getElementById("user-edit-name").value.trim();
+    const username = document.getElementById("user-edit-username").value.trim();
+    const role = document.getElementById("user-edit-role").value;
+    const password = document.getElementById("user-edit-password").value;
+    if(!name || !username){ toast("Nama & username wajib diisi", "error"); return; }
+    const id = document.getElementById("user-edit-id").value;
+    const dup = App.users.find(u=>u.username===username && u.id!==id);
+    if(dup){ toast("Username sudah dipakai", "error"); return; }
+    if(!id && !password){ toast("Password wajib diisi untuk pengguna baru", "error"); return; }
+    await Store.saveUser({ id, name, username, role, password });
+    Modal.close("modal-user");
+    toast("Pengguna tersimpan", "success");
+    App.render();
+  },
+  async deleteUser(){
+    const id = document.getElementById("user-edit-id").value;
+    if(!id || id==="u_admin") return;
+    if(!confirm("Hapus pengguna ini?")) return;
+    await Store.deleteUser(id);
+    Modal.close("modal-user");
+    toast("Pengguna dihapus", "success");
+    App.render();
+  },
+
+  copyGasUrl(){
+    const val = document.getElementById("gas-url-input").value.trim();
+    navigator.clipboard?.writeText(`gasWebAppUrl: "${val}",`);
+    toast("Disalin — tempel di APP_CONFIG pada file HTML (VSCode)", "success");
+  },
+};
+</script>
+<script>
+/* =====================================================================
+   CHECKLIST — form pemeriksaan per titik
+===================================================================== */
+const Checklist = {
+  currentPoint: null,
+  currentPhoto: null,
+
+  openFor(pointId){
+    const point = App.points.find(p=>p.id===pointId);
+    if(!point){ toast("Titik tidak ditemukan", "error"); return; }
+    this.currentPoint = point;
+    this.currentPhoto = null;
+    const { year, month } = App.period;
+    const existing = App.records.find(r=>r.pointId===pointId && r.year===year && r.month===month);
+    const mapName = App.maps.find(m=>m.id===point.mapId)?.name || "-";
+    const items = CHECKLIST_ITEMS[point.type];
+
+    const itemsHtml = items.map((name, idx)=>{
+      const prev = existing?.items?.find(it=>it.name===name)?.status || "";
+      return `
+      <div class="check-item-row">
+        <div class="ci-top"><div class="ci-name">${idx+1}. ${escapeHtml(name)}</div></div>
+        <div class="ci-options">
+          <label class="ci-opt b ${prev==='B'?'checked':''}"><input type="radio" name="ci_${idx}" value="B" ${prev==='B'?'checked':''} onchange="Checklist.markOpt(this)">BAIK</label>
+          <label class="ci-opt r ${prev==='R'?'checked':''}"><input type="radio" name="ci_${idx}" value="R" ${prev==='R'?'checked':''} onchange="Checklist.markOpt(this)">RUSAK</label>
+          <label class="ci-opt ta ${prev==='T.A'?'checked':''}"><input type="radio" name="ci_${idx}" value="T.A" ${prev==='T.A'?'checked':''} onchange="Checklist.markOpt(this)">TIDAK ADA</label>
+        </div>
+      </div>`;
+    }).join("");
+
+    document.getElementById("checklist-modal-body").innerHTML = `
+      <div class="point-info-card">
+        <div class="icon-badge" style="background:${TYPE_COLOR[point.type]}">${iconFor(point.type)}</div>
+        <div>
+          <h4>${TYPE_LABEL[point.type]} — Unit #${escapeHtml(point.number)}</h4>
+          <div class="code">${escapeHtml(point.barcode)} · ${escapeHtml(mapName)}${point.lokasi?" · "+escapeHtml(point.lokasi):""}</div>
+        </div>
+      </div>
+      <p class="help-text" style="margin:-8px 0 14px;">Periode: <b>${MONTH_NAMES[month]} ${year}</b> · Petugas: <b>${escapeHtml(Auth.current.name)}</b> (${Auth.current.role})${existing?' · <span style="color:var(--amber-600)">mengisi ulang, data lama akan diperbarui</span>':""}</p>
+      <div id="checklist-items">${itemsHtml}</div>
+      <div class="field" style="margin-top:14px;">
+        <label>Catatan (opsional)</label>
+        <textarea id="checklist-notes" rows="2" placeholder="Catatan tambahan, mis. tindak lanjut perbaikan...">${existing?.notes||""}</textarea>
+      </div>
+      <div class="field">
+        <label>Foto Bukti (opsional)</label>
+        <input type="file" accept="image/*" capture="environment" onchange="Checklist.onPhoto(event)">
+        <img id="checklist-photo-preview" style="display:${existing?.photo?"block":"none"};margin-top:8px;max-height:140px;border-radius:8px;border:1px solid var(--border);" src="${existing?.photo||""}">
+      </div>
+    `;
+    if(existing?.photo) this.currentPhoto = existing.photo;
+    Modal.open("modal-checklist");
+  },
+  markOpt(input){
+    const row = input.closest(".check-item-row");
+    row.querySelectorAll(".ci-opt").forEach(o=>o.classList.remove("checked"));
+    input.closest(".ci-opt").classList.add("checked");
+  },
+  async onPhoto(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const dataUrl = await fileToBase64(file);
+    this.currentPhoto = dataUrl;
+    const prev = document.getElementById("checklist-photo-preview");
+    prev.src = dataUrl; prev.style.display = "block";
+  },
+  async submit(){
+    const point = this.currentPoint;
+    const items = CHECKLIST_ITEMS[point.type];
+    const results = [];
+    for(let i=0;i<items.length;i++){
+      const checked = document.querySelector(`input[name="ci_${i}"]:checked`);
+      if(!checked){ toast(`Item "${items[i]}" belum dipilih`, "error"); return; }
+      results.push({ name: items[i], status: checked.value });
+    }
+    const btn = document.getElementById("btn-submit-checklist");
+    btn.disabled = true; btn.textContent = "Menyimpan...";
+    try{
+      let photo = this.currentPhoto;
+      if(photo && photo.startsWith("data:") && Store.mode==="gas"){ photo = await Store.uploadImage(photo); }
+      await Store.saveRecord({
+        pointId: point.id,
+        year: App.period.year,
+        month: App.period.month,
+        items: results,
+        notes: document.getElementById("checklist-notes").value.trim(),
+        photo: photo || "",
+        checkerName: Auth.current.name,
+        checkerRole: Auth.current.role,
+      });
+      Modal.close("modal-checklist");
+      toast("Pemeriksaan tersimpan ✓", "success");
+      App.render();
+    }catch(err){
+      toast("Gagal menyimpan: "+err.message, "error");
+    }finally{
+      btn.disabled = false; btn.textContent = "Simpan Pemeriksaan";
+    }
+  },
+};
+
+/* =====================================================================
+   SCANNER — scan barcode via kamera (html5-qrcode)
+===================================================================== */
+const Scanner = {
+  instance: null,
+  open(){
+    Modal.open("modal-scanner");
+    document.getElementById("manual-barcode-input").value = "";
+    if(typeof Html5Qrcode === "undefined"){
+      document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Pustaka scanner gagal dimuat (perlu koneksi internet). Gunakan input kode manual di bawah.</p>';
+      return;
+    }
+    this.instance = new Html5Qrcode("scanner-view");
+    const config = { fps: 10, qrbox: { width: 230, height: 140 } };
+    this.instance.start({ facingMode: "environment" }, config, this.onScan.bind(this), ()=>{})
+      .catch(()=>{
+        document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Tidak bisa mengakses kamera. Periksa izin kamera browser, atau gunakan input kode manual.</p>';
+      });
+  },
+  close(){
+    if(this.instance){ this.instance.stop().catch(()=>{}).finally(()=>{ this.instance.clear(); this.instance=null; }); }
+    Modal.close("modal-scanner");
+  },
+  onScan(decodedText){
+    this.handleCode(decodedText);
+  },
+  submitManual(){
+    const val = document.getElementById("manual-barcode-input").value.trim();
+    if(!val){ toast("Masukkan kode terlebih dahulu", "error"); return; }
+    this.handleCode(val);
+  },
+  handleCode(code){
+    const point = App.points.find(p=>p.barcode.toLowerCase()===code.toLowerCase());
+    if(!point){ toast(`Kode "${code}" tidak terdaftar`, "error"); return; }
+    this.close();
+    Checklist.openFor(point.id);
+  },
+};
+
+/* =====================================================================
+   BARCODE PRINT — render Code128 pakai JsBarcode
+===================================================================== */
+const Barcode = {
+  afterRender(){
+    if(typeof JsBarcode === "undefined") return;
+    document.querySelectorAll(".barcode-svg").forEach(svg=>{
+      try{ JsBarcode(svg, svg.dataset.code, { format:"CODE128", width:1.6, height:40, fontSize:12, margin:4 }); }catch(e){}
+    });
+  },
+};
+
+/* =====================================================================
+   REPORT — riwayat & laporan
+===================================================================== */
+const Report = {
+  refreshTable(){
+    const mapF = document.getElementById("filter-map").value;
+    const typeF = document.getElementById("filter-type").value;
+    const statusF = document.getElementById("filter-status").value;
+    const { year, month } = App.period;
+    let rows = App.points.filter(p=>{
+      if(mapF && p.mapId!==mapF) return false;
+      if(typeF && p.type!==typeF) return false;
+      return true;
+    });
+    const mapName = id => App.maps.find(m=>m.id===id)?.name || "-";
+    let html = `<div style="overflow-x:auto;"><table><thead><tr><th>Jenis</th><th>Unit</th><th>Lokasi</th><th>Status</th><th>Checker</th><th>Waktu</th><th></th></tr></thead><tbody>`;
+    let count = 0;
+    for(const p of rows){
+      const rec = App.records.find(r=>r.pointId===p.id && r.year===year && r.month===month);
+      const status = statusOf(p.id, App.records, year, month);
+      if(statusF && statusF!==status) continue;
+      count++;
+      const statusBadge = status==="green" ? '<span class="badge green">Sudah Dicek</span>' : status==="orange" ? '<span class="badge orange">Perlu Perhatian</span>' : '<span class="badge red">Belum Dicek</span>';
+      html += `<tr>
+        <td>${TYPE_LABEL[p.type]}</td>
+        <td><b>${escapeHtml(p.number)}</b> <span class="mono muted" style="font-size:11px;">${escapeHtml(p.barcode)}</span></td>
+        <td>${escapeHtml(mapName(p.mapId))}</td>
+        <td>${statusBadge}</td>
+        <td>${rec?escapeHtml(rec.checkerName):"-"}</td>
+        <td class="muted">${rec?new Date(rec.timestamp).toLocaleString("id-ID"):"-"}</td>
+        <td>${rec?`<button class="icon-btn" onclick="Report.viewDetail('${rec.id}')">👁</button>`:""}</td>
+      </tr>`;
+    }
+    html += `</tbody></table></div>`;
+    if(count===0) html = `<div class="empty-state">Tidak ada data sesuai filter.</div>`;
+    document.getElementById("report-table-wrap").innerHTML = html;
+  },
+  viewDetail(recId){
+    const rec = App.records.find(r=>r.id===recId);
+    if(!rec) return;
+    const point = App.points.find(p=>p.id===rec.pointId);
+    const mapName = App.maps.find(m=>m.id===point.mapId)?.name || "-";
+    const itemsHtml = rec.items.map(it=>{
+      const cls = it.status==="B"?"green":it.status==="R"?"red":"orange";
+      const lbl = it.status==="B"?"BAIK":it.status==="R"?"RUSAK":"TIDAK ADA";
+      return `<tr><td>${escapeHtml(it.name)}</td><td><span class="badge ${cls}">${lbl}</span></td></tr>`;
+    }).join("");
+    document.getElementById("record-detail-body").innerHTML = `
+      <div class="point-info-card">
+        <div class="icon-badge" style="background:${TYPE_COLOR[point.type]}">${iconFor(point.type)}</div>
+        <div><h4>${TYPE_LABEL[point.type]} — Unit #${escapeHtml(point.number)}</h4><div class="code">${escapeHtml(point.barcode)} · ${escapeHtml(mapName)}</div></div>
+      </div>
+      <p style="font-size:13px;"><b>Periode:</b> ${MONTH_NAMES[rec.month]} ${rec.year} &nbsp; <b>Checker:</b> ${escapeHtml(rec.checkerName)} (${rec.checkerRole}) &nbsp; <b>Waktu:</b> ${new Date(rec.timestamp).toLocaleString("id-ID")}</p>
+      <table><thead><tr><th>Item</th><th>Kondisi</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+      ${rec.notes?`<p style="font-size:13px;margin-top:12px;"><b>Catatan:</b> ${escapeHtml(rec.notes)}</p>`:""}
+      ${rec.photo?`<img src="${rec.photo}" style="margin-top:10px;max-height:200px;border-radius:8px;border:1px solid var(--border);">`:""}
+    `;
+    Modal.open("modal-record-detail");
+  },
+  exportCsv(){
+    const { year, month } = App.period;
+    let csv = "Jenis,Nomor Unit,Barcode,Lokasi,Item,Kondisi,Catatan,Checker,Waktu\n";
+    for(const p of App.points){
+      const rec = App.records.find(r=>r.pointId===p.id && r.year===year && r.month===month);
+      const mapName = App.maps.find(m=>m.id===p.mapId)?.name || "-";
+      if(!rec){ csv += `${TYPE_LABEL[p.type]},${p.number},${p.barcode},${mapName},,BELUM DICEK,,,\n`; continue; }
+      for(const it of rec.items){
+        csv += `${TYPE_LABEL[p.type]},${p.number},${p.barcode},${mapName},${it.name},${it.status},"${(rec.notes||"").replace(/"/g,'""')}",${rec.checkerName},${rec.timestamp}\n`;
+      }
+    }
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `Laporan_APAR_Hydrant_${MONTH_NAMES[month]}_${year}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  },
+};
+
+// isi tabel laporan setiap kali view report dirender
+const _origRender = App.render.bind(App);
+App.render = async function(){
+  await _origRender();
+  if(App.view==="report") Report.refreshTable();
+};
+</script>
+<script>
+// Semua modul sudah dimuat — jalankan aplikasi.
+boot();
+</script>
+</body>
+</html>
