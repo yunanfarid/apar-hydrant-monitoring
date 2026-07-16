@@ -370,10 +370,6 @@ tr:hover td{background:#fafbfc;}
       <button type="submit" class="btn btn-primary btn-block">Masuk</button>
     </form>
     <div class="login-demo">
-      <b>Akun bawaan (ganti setelah setup):</b><br>
-      Admin — <span class="mono">admin / admin123</span><br>
-      Vendor 1 — <span class="mono">vendor1 / vendor123</span><br>
-      Vendor 2 — <span class="mono">vendor2 / vendor123</span><br>
       Mode data saat ini: <b id="login-mode-label">Lokal (browser ini saja)</b>
     </div>
   </div>
@@ -613,7 +609,7 @@ tr:hover td{background:#fafbfc;}
 const APP_CONFIG = {
   companyName: "NVDC Cibitung",
   goLiveYear: 2026,
-  goLiveMonth: 7, // Agustus 2026 = mulai go-live. Sebelum bulan ini tidak ditampilkan.
+  goLiveMonth: 7,
   // Isi dengan URL Web App Google Apps Script setelah deploy (lihat PANDUAN_SETUP.md).
   // Kosongkan ("") untuk memakai mode LOKAL (localStorage browser ini saja, cocok utk uji coba).
   gasWebAppUrl: "https://script.google.com/macros/s/AKfycbxcV_xS4EHDaPf5y9JgjHRB6yn_brFtSOnqrHSHAFB1OTUwWIs2agar9NsvK7S4mX_z/exec",
@@ -897,7 +893,7 @@ const NAV_ITEMS = [
 
 const App = {
   view: "dashboard",
-  period: { year: APP_CONFIG.goLiveYear, month: APP_CONFIG.goLiveMonth },
+  period: { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
   maps: [], points: [], records: [], users: [],
   activeMapId: null,
 
@@ -1006,7 +1002,7 @@ const App = {
 
 async function boot(){
   await Store.init();
-  document.getElementById("login-mode-label").textContent = Store.mode==="gas" ? "Google Sheets (online)" : "Lokal (browser ini saja)";
+  document.getElementById("login-mode-label").textContent = Store.mode==="gas" ? "Online" : "Lokal (browser ini saja)";
   if(Auth.restore()){
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("active");
