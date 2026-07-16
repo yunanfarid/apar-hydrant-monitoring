@@ -418,7 +418,7 @@ tr:hover td{background:#fafbfc;}
         <div class="period-picker">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="2" style="margin-left:6px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <select id="picker-month" onchange="App.onPeriodChange()"></select>
-          <select id="picker-year" onchange="App.onPeriodChange()"></select>
+          <select id="picker-year" onchange="App.onYearChange()"></select>
         </div>
       </div>
     </div>
@@ -613,7 +613,7 @@ tr:hover td{background:#fafbfc;}
 const APP_CONFIG = {
   companyName: "NVDC Cibitung",
   goLiveYear: 2026,
-  goLiveMonth: 8, // Agustus 2026 = mulai go-live. Sebelum bulan ini tidak ditampilkan.
+  goLiveMonth: 7, // Agustus 2026 = mulai go-live. Sebelum bulan ini tidak ditampilkan.
   // Isi dengan URL Web App Google Apps Script setelah deploy (lihat PANDUAN_SETUP.md).
   // Kosongkan ("") untuk memakai mode LOKAL (localStorage browser ini saja, cocok utk uji coba).
   gasWebAppUrl: "https://script.google.com/macros/s/AKfycbxcV_xS4EHDaPf5y9JgjHRB6yn_brFtSOnqrHSHAFB1OTUwWIs2agar9NsvK7S4mX_z/exec",
@@ -931,12 +931,15 @@ const App = {
     }
   },
   onPeriodChange(){
+    this.period.month = parseInt(document.getElementById("picker-month").value);
+    this.render();
+  },
+  onYearChange(){
     this.period.year = parseInt(document.getElementById("picker-year").value);
     this.refreshMonthOptions();
     this.period.month = parseInt(document.getElementById("picker-month").value);
     this.render();
   },
-
   renderNav(){
     const role = Auth.current.role;
     const items = NAV_ITEMS.filter(n=>n.roles.includes(role));
