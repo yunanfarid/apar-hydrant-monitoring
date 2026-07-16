@@ -1087,7 +1087,10 @@ const Views = {
     const pins = points.map(p=>{
       const s = statusOf(p.id, App.records, year, month);
       if(s==="red") redC++; else if(s==="green") greenC++; else orangeC++;
-      return `<div class="pin status-${s}" style="left:${p.x}%;top:${p.y}%;" data-point-id="${p.id}" onclick="Checklist.openFor('${p.id}')" title="${escapeHtml(TYPE_LABEL[p.type])} #${escapeHtml(p.number)}">
+      const clickAction = Auth.isAdmin()
+          ? `Checklist.openFor('${p.id}')`
+          : `Checklist.vendorScanRequired()`;
+      return `<div class="pin status-${s}" style="left:${p.x}%;top:${p.y}%;" data-point-id="${p.id}" onclick="${clickAction}" title="${escapeHtml(TYPE_LABEL[p.type])} #${escapeHtml(p.number)}">
         <div class="pin-icon" style="background:${s==='red'?'var(--red-500)':s==='green'?'var(--green-500)':'var(--orange-500)'}">${iconFor(p.type)}</div>
         <div class="pin-label">${escapeHtml(p.number)}</div>
       </div>`;
@@ -1510,7 +1513,8 @@ const Admin = {
 const Checklist = {
   currentPoint: null,
   currentPhoto: null,
-
+  vendorScanRequired(){toast("Wajib melakukan scan barcode pada unit fisik sebelum mengisi checklist.","error");
+  },
   openFor(pointId){
     const point = App.points.find(p=>p.id===pointId);
     if(!point){ toast("Titik tidak ditemukan", "error"); return; }
