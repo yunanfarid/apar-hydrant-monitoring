@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>SIGAP • Sistem Inspeksi APAR & Hydrant</title>
+<title>SIAPA • Sistem Inspeksi APAR & Hydrant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <style>
 /* =====================================================================
-   SIGAP — Sistem Inspeksi APAR & Hydrant
+   SIAPA — Sistem Inspeksi APAR & Hydrant
    -------------------------------------------------------------------
    Desain: tema industrial safety. Navy gelap untuk struktur, amber utk
    aksi utama, merah/hijau/oranye utk status pemeriksaan.
@@ -484,7 +484,7 @@ tr:hover td{background:#fafbfc;}
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2c-1 3-4 4.5-4 8.5A4 4 0 0 0 12 14.5a4 4 0 0 0 4-4C16 6.5 13 5 12 2Z" fill="#fff"/><path d="M12 8c-.5 1.5-2 2-2 4a2 2 0 0 0 4 0c0-2-1.5-2.5-2-4Z" fill="#fff" opacity=".7"/></svg>
       </div>
       <div>
-        <h1>SIGAP</h1>
+        <h1>SIAPA</h1>
         <p>Sistem Inspeksi APAR & Hydrant</p>
       </div>
     </div>
@@ -511,7 +511,7 @@ tr:hover td{background:#fafbfc;}
   <div class="mobile-topbar">
     <div class="flex items-center gap-8">
       <div class="logo" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(145deg,var(--amber-500),var(--red-500));"></div>
-      <b style="font-size:14px;">SIGAP</b>
+      <b style="font-size:14px;">SIAPA</b>
     </div>
     <button class="icon-btn" style="background:var(--navy-800);color:#fff;" onclick="Auth.logout()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -523,7 +523,7 @@ tr:hover td{background:#fafbfc;}
       <div class="logo">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2c-1 3-4 4.5-4 8.5A4 4 0 0 0 12 14.5a4 4 0 0 0 4-4C16 6.5 13 5 12 2Z" fill="#fff"/></svg>
       </div>
-      <div><b>SIGAP</b><span>APAR & Hydrant</span></div>
+      <div><b>SIAPA</b><span>APAR & Hydrant</span></div>
     </div>
     <div id="nav-list"></div>
     <div class="sidebar-footer">
@@ -624,13 +624,6 @@ tr:hover td{background:#fafbfc;}
     <div class="modal-body">
       <div id="scanner-view"></div>
       <p class="help-text text-center" style="margin-top:10px;">Arahkan kamera ke label barcode pada APAR / Hydrant. Pastikan izin kamera diaktifkan.</p>
-      <div class="field" style="margin-top:14px;">
-        <label>Atau masukkan kode manual</label>
-        <div class="flex gap-8">
-          <input type="text" id="manual-barcode-input" placeholder="mis. APAR-OB1-001">
-          <button class="btn btn-dark" onclick="Scanner.submitManual()">Cari</button>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -772,7 +765,7 @@ tr:hover td{background:#fafbfc;}
 </div>
 <script>
 /* =====================================================================
-   SIGAP — APP CONFIG
+   SIAPA — APP CONFIG
    Ubah bagian ini sesuai kebutuhan (nama perusahaan, koneksi backend, dst)
 ===================================================================== */
 const APP_CONFIG = {
