@@ -623,7 +623,7 @@ tr:hover td{background:#fafbfc;}
     </div>
     <div class="modal-body">
       <div id="scanner-view"></div>
-      <p class="help-text text-center" style="margin-top:10px;">Arahkan kamera ke label barcode pada APAR / Hydrant. Pastikan izin kamera diaktifkan.</p>
+      <p class="help-text text-center" style="margin-top:10px;">Arahkan kamera ke label barcode pada APAR / Hydrant. Pastikan izin kamera diaktifkan. Pemeriksaan hanya dapat dilakukan melalui scan barcode pada unit yang terpasang di lapangan.</p>
     </div>
   </div>
 </div>
@@ -1935,9 +1935,7 @@ const Checklist = {
 ===================================================================== */
 const Scanner = {
   instance: null,
-  open(){
-    Modal.open("modal-scanner");
-    document.getElementById("manual-barcode-input").value = "";
+  open(){Modal.open("modal-scanner");
     if(typeof Html5Qrcode === "undefined"){
       document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Pustaka scanner gagal dimuat (perlu koneksi internet). Gunakan input kode manual di bawah.</p>';
       return;
@@ -1955,11 +1953,6 @@ const Scanner = {
   },
   onScan(decodedText){
     this.handleCode(decodedText);
-  },
-  submitManual(){
-    const val = document.getElementById("manual-barcode-input").value.trim();
-    if(!val){ toast("Masukkan kode terlebih dahulu", "error"); return; }
-    this.handleCode(val);
   },
   handleCode(code){
     const point = App.points.find(p=>p.barcode.toLowerCase()===code.toLowerCase());
