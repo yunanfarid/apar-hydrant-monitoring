@@ -205,7 +205,12 @@ a{color:inherit;}
   position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   overflow:auto;max-height:74vh;
 }
-.map-canvas{position:relative;display:inline-block;min-width:100%;}
+.map-canvas{
+  position:relative;
+  display:inline-block;
+  min-width:100%;
+  touch-action:none;
+}
 .map-canvas img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;}
 .map-empty{padding:70px 20px;text-align:center;color:var(--text-500);}
 
@@ -274,6 +279,31 @@ a{color:inherit;}
   background:var(--amber-500);box-shadow:0 10px 24px -8px rgba(245,165,36,0.7);
   display:flex;align-items:center;justify-content:center;z-index:40;border:none;
 }
+.map-zoom-controls{
+  position:fixed;
+  bottom:100px;
+  right:26px;
+  z-index:40;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.zoom-btn{
+  width:48px;
+  height:48px;
+  border:none;
+  border-radius:50%;
+  background:white;
+  font-size:24px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+}
+
+.zoom-btn:hover{
+  background:#f2f2f2;
+}
 .scan-fab svg{width:26px;height:26px;color:#241300;}
 #scanner-view{width:100%;border-radius:12px;overflow:hidden;background:#000;min-height:280px;}
 
@@ -323,11 +353,11 @@ tr:hover td{background:#fafbfc;}
 @media (max-width:900px){
   .sidebar{display:none;}
   .stat-row{grid-template-columns:repeat(2,1fr);}
-  .content{padding:16px;}
-  .topbar{padding:12px 16px;}
+  .content{padding:6px;}
+  .topbar{padding:8px 12px;}
   .row2{grid-template-columns:1fr;}
   .mobile-topbar{
-    display:flex;position:sticky;top:0;z-index:30;background:var(--navy-900);color:#fff;
+    display:none;position:sticky;top:0;z-index:30;background:var(--navy-900);color:#fff;
     align-items:center;justify-content:space-between;padding:12px 14px;
   }
   .mobile-nav{
@@ -340,6 +370,107 @@ tr:hover td{background:#fafbfc;}
 }
 @media (min-width:901px){
   .mobile-nav{display:none;}
+}
+#mobile-menu-btn{
+
+  display:flex;
+
+  width:42px;
+  height:42px;
+
+  border:none;
+  border-radius:10px;
+
+  background:var(--navy-900);
+
+  color:white;
+
+  align-items:center;
+  justify-content:center;
+
+  font-size:24px;
+  font-weight:bold;
+
+}
+
+@media (max-width:900px){
+
+  #mobile-menu-btn{
+
+    display:flex;
+
+    width:42px;
+    height:42px;
+
+    border:none;
+    border-radius:10px;
+
+    background:white;
+
+    align-items:center;
+    justify-content:center;
+
+    font-size:24px;
+    font-weight:bold;
+
+  }
+
+}
+#mobile-drawer{
+
+  position:fixed;
+
+  top:0;
+  left:-260px;
+
+  width:240px;
+  height:100vh;
+
+  background:var(--navy-900);
+
+  color:white;
+
+  z-index:999;
+
+  transition:0.3s;
+
+  padding-top:60px;
+
+}
+
+#mobile-drawer.open{
+
+  left:0;
+
+}
+
+#mobile-drawer div{
+
+  padding:16px 20px;
+
+  border-bottom:1px solid rgba(255,255,255,0.1);
+
+  cursor:pointer;
+
+}
+#drawer-overlay{
+
+  display:none;
+
+  position:fixed;
+
+  inset:0;
+
+  background:rgba(0,0,0,0.4);
+
+  z-index:998;
+
+}
+
+#drawer-overlay.show{
+
+  display:block;
+
 }
 </style>
 </head>
@@ -405,7 +536,7 @@ tr:hover td{background:#fafbfc;}
   </nav>
 
   <div class="main-col">
-    <div class="topbar">
+    <div class="topbar"><button id="mobile-menu-btn"onclick="MobileMenu.toggle()"></button>
       <div>
         <h2 id="topbar-title">Dashboard</h2>
         <div class="sub" id="topbar-sub">Ringkasan status pemeriksaan</div>
@@ -420,14 +551,52 @@ tr:hover td{background:#fafbfc;}
     </div>
     <div class="content" id="view-root"></div>
   </div>
+  <div class="map-zoom-controls" id="map-zoom-controls">
 
+  <button class="zoom-btn"
+          onclick="MapZoom.zoomIn()">
+    +
+  </button>
+
+  <button class="zoom-btn"
+          onclick="MapZoom.zoomOut()">
+    −
+  </button>
+
+  <button class="zoom-btn"
+          onclick="MapZoom.reset()">
+    ⌂
+  </button>
+
+  </div>
   <div class="mobile-nav" id="mobile-nav-list"></div>
 
   <button class="scan-fab no-print" id="scan-fab-btn" onclick="Scanner.open()" title="Scan barcode APAR/Hydrant">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
   </button>
 </div>
+<div id="drawer-overlay"
+     onclick="MobileMenu.close()">
+</div>
+<div id="mobile-drawer">
 
+  <div onclick="App.go('dashboard');MobileMenu.close();">
+    Dashboard
+  </div>
+
+  <div onclick="App.go('map')">
+    Peta
+  </div>
+
+  <div onclick="App.go('report')">
+    Riwayat
+  </div>
+
+  <div onclick="Auth.logout()">
+    Logout
+  </div>
+
+</div>
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <!-- ================= MODAL: CHECKLIST PEMERIKSAAN ================= -->
@@ -825,6 +994,58 @@ function statusOf(pointId, records, year, month){
   const hasBad = (rec.items||[]).some(it=>it.status==="R");
   return hasBad ? "orange" : "green";
 }
+const MobileMenu = {
+
+  open(){
+
+    document
+      .getElementById("mobile-drawer")
+      .classList.add("open");
+
+    document
+      .getElementById("drawer-overlay")
+      .classList.add("show");
+
+    document
+      .getElementById("mobile-menu-btn")
+      .innerHTML = "✕";
+
+  },
+
+  close(){
+
+    document
+      .getElementById("mobile-drawer")
+      .classList.remove("open");
+
+    document
+      .getElementById("drawer-overlay")
+      .classList.remove("show");
+
+    document
+      .getElementById("mobile-menu-btn")
+      .innerHTML = "☰";
+
+  },
+
+  toggle(){
+
+    const drawer =
+      document.getElementById("mobile-drawer");
+
+    if(drawer.classList.contains("open")){
+
+      this.close();
+
+    }else{
+
+      this.open();
+
+    }
+
+  }
+
+};
 const Modal = {
   open(id){ document.getElementById(id).classList.add("active"); },
   close(id){ document.getElementById(id).classList.remove("active"); },
@@ -1254,7 +1475,113 @@ const Views = {
 /* =====================================================================
    MAP VIEWER — render pin, klik utk isi checklist, mode tambah titik admin
 ===================================================================== */
+const MapZoom = {
+
+  scale : 1,
+  x : 0,
+  y : 0,
+  
+apply(){
+
+  const canvas =
+      document.getElementById("map-canvas");
+
+  if(!canvas) return;
+
+  canvas.style.transform =
+      `translate(${this.x}px, ${this.y}px)
+       scale(${this.scale})`;
+
+  canvas.style.transformOrigin =
+      "top left";
+
+  document
+      .querySelectorAll(".pin")
+      .forEach(pin=>{
+
+          pin.style.transform =
+              `translate(-50%,-100%)
+               scale(${1 / this.scale})`;
+
+      });
+
+},
+
+  zoomIn(){
+
+    this.scale += 0.25;
+
+    if(this.scale > 3)
+      this.scale = 3;
+
+    this.apply();
+
+  },
+
+  zoomOut(){
+
+    this.scale -= 0.25;
+
+    if(this.scale < 1)
+      this.scale = 1;
+
+    this.apply();
+
+  },
+
+  reset(){
+
+    this.scale = 1;
+    this.x = 0;
+    this.y = 0;
+
+    this.apply();
+
+  }
+
+};
 const MapViewer = {
+  enableTouchPan(){
+
+  const canvas =
+    document.getElementById("map-canvas");
+
+  if(!canvas) return;
+
+  let startX;
+  let startY;
+
+  canvas.addEventListener("touchstart", (e)=>{
+
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+
+  });
+
+  canvas.addEventListener("touchmove", (e)=>{
+
+    if(MapZoom.scale <= 1)
+      return;
+
+    e.preventDefault();
+
+    const currentX =
+      e.touches[0].clientX;
+
+    const currentY =
+      e.touches[0].clientY;
+
+    MapZoom.x += currentX - startX;
+    MapZoom.y += currentY - startY;
+
+    startX = currentX;
+    startY = currentY;
+
+    MapZoom.apply();
+
+  });
+
+},
   placing: false,
   afterRender(){
     const canvas = document.getElementById("map-canvas");
@@ -1277,6 +1604,7 @@ const MapViewer = {
         });
       });
     }
+  this.enableTouchPan();
   },
   startDrag(pinEl, canvas){
     let moved = false;
