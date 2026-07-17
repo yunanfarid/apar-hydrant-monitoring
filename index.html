@@ -1774,6 +1774,9 @@ const Checklist = {
       if(!checked){ toast(`Item "${items[i]}" belum dipilih`, "error"); return; }
       results.push({ name: items[i], status: checked.value });
     }
+    const hasFinding = results.some(r => r.status === "R" || r.status === "T.A");
+    if(hasFinding && !this.currentPhoto){toast("Foto evidence wajib dilampirkan karena ada temuan Rusak/Tidak Ada","error");
+    return;}
     const btn = document.getElementById("btn-submit-checklist");
     btn.disabled = true; btn.textContent = "Menyimpan...";
     try{
