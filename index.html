@@ -503,7 +503,7 @@ tr:hover td{background:#fafbfc;}
 </div>
 <div class="modal-overlay" id="modal-required-photo">
   <div class="modal-box">
-    <div class="modal-head"><h3>Foto Unit</h3></div>
+    <div class="modal-head"><h3>Foto Unit</h3><button class="close-x" onclick="Scanner.cancelRequiredPhoto()">✕</button></div>
     <div class="modal-body">
     <p>Ambil foto unit APAR/Hydrant yang sedang diperiksa.</p>
       <input
@@ -1227,6 +1227,7 @@ const Views = {
 
     const adminTools = Auth.isAdmin() ? `
       <button class="btn btn-dark btn-sm" onclick="Admin.togglePlaceMode()" id="btn-place-mode">+ Tambah Titik di Peta</button>
+      <button class="btn btn-ghost btn-sm" id="btn-drag-lock" onclick="MapViewer.toggleDrag()">🔒 Posisi Terkunci</button>
       <button class="btn btn-ghost btn-sm" onclick="App.go('admin-maps')">Ganti Denah</button>
     ` : "";
 
@@ -1445,7 +1446,12 @@ const MapViewer = {
     MapZoom.apply();
   });
 },
+  dragUnlocked : false,
   placing: false,
+  toggleDrag(){this.dragUnlocked = !this.dragUnlocked;
+  const btn = document.getElementById("btn-drag-lock");
+  if(btn){btn.textContent = this.dragUnlocked? "🔓 Posisi Tidak Terkunci" : "🔒 Posisi Terkunci";}
+},
   afterRender(){
     const canvas = document.getElementById("map-canvas");
     if(!canvas) return;
@@ -1470,6 +1476,7 @@ const MapViewer = {
   this.enableTouchPan();
   },
   startDrag(pinEl, canvas){
+    if(!this.dragUnlocked){return;}
     let moved = false;
     function onMove(ev){
       moved = true;
@@ -1853,7 +1860,13 @@ const Scanner = {
     Modal.close("modal-required-photo");
     Checklist.openFor(this.pendingPointId);
   },
-};
+  cancelRequiredPhoto(){
+    this.requiredPhoto = null;
+    this.pendingPointId = null;
+    document.getElementById("required-photo-input").value = "";
+    document.getElementById("required-photo-preview").style.display = "none";
+    Modal.close("modal-required-photo");
+  }};
 
 /* =====================================================================
    BARCODE PRINT — render Code128 pakai JsBarcode
