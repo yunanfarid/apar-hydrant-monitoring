@@ -1944,7 +1944,7 @@ const Report = {
       <p style="font-size:13px;"><b>Periode:</b> ${MONTH_NAMES[rec.month]} ${rec.year} &nbsp; <b>Checker:</b> ${escapeHtml(rec.checkerName)} (${rec.checkerRole}) &nbsp; <b>Waktu:</b> ${new Date(rec.timestamp).toLocaleString("id-ID")}</p>
       <table><thead><tr><th>Item</th><th>Kondisi</th></tr></thead><tbody>${itemsHtml}</tbody></table>
       ${rec.notes?`<p style="font-size:13px;margin-top:12px;"><b>Catatan:</b> ${escapeHtml(rec.notes)}</p>`:""}
-      ${rec.attendancePhoto?`<div style="margin-top:14px;"><b>Foto Kehadiran</b><br><img src="${rec.attendancePhoto}"></div>`:""}
+      ${rec.attendancePhoto?`<div style="margin-top:14px;"><b>Foto Verifikasi Unit</b><br><img src="${rec.attendancePhoto}"></div>`:""}
       ${rec.photo?`<div style="margin-top:14px;"><b>Foto Evidence</b><br><img src="${rec.photo}"></div>`:""}
     `;
     Modal.open("modal-record-detail");
