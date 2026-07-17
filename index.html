@@ -364,6 +364,17 @@ tr:hover td{background:#fafbfc;}
 }
 #drawer-overlay.show{display:block;
 }
+.legend.compact{gap:8px; font-size:12px; font-weight:700;
+}
+.legend.compact span{ padding:4px 10px; border-radius:20px; background:#fff; border:1px solid var(--border);
+}
+.topbar-left{display:flex; align-items:center; gap:12px;
+}
+#mobile-menu-btn{display:none;
+}
+@media(max-width:900px){
+  #mobile-menu-btn{ display:flex; }
+}
 </style>
 </head>
 <body>
@@ -428,10 +439,11 @@ tr:hover td{background:#fafbfc;}
   </nav>
 
   <div class="main-col">
-    <div class="topbar"><button id="mobile-menu-btn"onclick="MobileMenu.toggle()">☰</button>
+    <div class="topbar"><div class="topbar-left"><button id="mobile-menu-btn"onclick="MobileMenu.toggle()">☰</button>
       <div>
         <h2 id="topbar-title">Dashboard</h2>
         <div class="sub" id="topbar-sub">Ringkasan status pemeriksaan</div>
+      </div>
       </div>
       <div class="flex items-center gap-12">
         <div class="period-picker">
@@ -1144,7 +1156,7 @@ const Views = {
       <div class="stat-card"><div class="num">${total}</div><div class="lbl">Total Unit Terdaftar</div></div>
       <div class="stat-card green"><div class="num">${done}</div><div class="lbl">Sudah Dicek — ${MONTH_NAMES[month]} ${year}</div></div>
       <div class="stat-card red"><div class="num">${belum}</div><div class="lbl">Belum Dicek</div></div>
-      <div class="stat-card orange"><div class="num">${danger}</div><div class="lbl">Perlu Perhatian (Rusak)</div></div>
+      <div class="stat-card orange"><div class="num">${danger}</div><div class="lbl">Perlu Perhatian </div></div>
     </div>
     <div class="flex justify-between items-center" style="margin-bottom:12px;">
       <h3 style="margin:0;font-size:15.5px;">Progres per Lokasi</h3>
@@ -1774,7 +1786,7 @@ const Scanner = {
     const config = { fps: 10, qrbox: { width: 230, height: 140 } };
     this.instance.start({ facingMode: "environment" }, config, this.onScan.bind(this), ()=>{})
       .catch(()=>{
-        document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Tidak bisa mengakses kamera. Periksa izin kamera browser, atau gunakan input kode manual.</p>';
+        document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Tidak bisa mengakses kamera. Periksa izin kamera browser.</p>';
       });
   },
   close(){
