@@ -501,6 +501,34 @@ tr:hover td{background:#fafbfc;}
 </div>
 
 </div>
+<div class="modal-overlay" id="modal-required-photo">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Foto Unit</h3></div>
+    <div class="modal-body">
+    <p>Ambil foto unit APAR/Hydrant yang sedang diperiksa.</p>
+      <input
+        type="file"
+        id="required-photo-input"
+        accept="image/*"
+        capture="environment"
+        onchange="Scanner.onRequiredPhoto(event)">
+      <img
+        id="required-photo-preview"
+        style="
+          display:none;
+          margin-top:10px;
+          max-height:220px;
+          width:100%;
+          object-fit:contain;
+          border-radius:10px;
+          border:1px solid var(--border);
+        ">
+      </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="Scanner.confirmRequiredPhoto()">Lanjut Checklist</button>
+    </div>
+  </div>
+</div>
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <!-- ================= MODAL: CHECKLIST PEMERIKSAAN ================= -->
@@ -888,7 +916,7 @@ function iconFor(type){
 function statusOf(pointId, records, year, month){
   const rec = records.find(r=>r.pointId===pointId && r.year===year && r.month===month);
   if(!rec) return "red";
-  const hasBad = (rec.items||[]).some(it=>it.status==="R");
+  const hasBad = (rec.items||[]).some(it=>it.status==="R" || it.status === "T.A");
   return hasBad ? "orange" : "green";
 }
 const MobileMenu = {
@@ -1777,6 +1805,8 @@ const Checklist = {
 ===================================================================== */
 const Scanner = {
   instance: null,
+  requiredPhoto : null,
+  pendingPointId : null,
   open(){Modal.open("modal-scanner");
     if(typeof Html5Qrcode === "undefined"){
       document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Pustaka scanner gagal dimuat (perlu koneksi internet).</p>';
@@ -1800,7 +1830,22 @@ const Scanner = {
     const point = App.points.find(p=>p.barcode.toLowerCase()===code.toLowerCase());
     if(!point){ toast(`Kode "${code}" tidak terdaftar`, "error"); return; }
     this.close();
-    Checklist.openFor(point.id);
+    this.pendingPointId = point.id;
+    this.requiredPhoto = null;
+    document.getElementById("required-photo-input").value = "";
+    document.getElementById("required-photo-preview").style.display = "none";
+    Modal.open("modal-required-photo");
+  },
+    async onRequiredPhoto(event){
+    const file = event.target.files[0]; if(!file) return;
+    const dataUrl = await fileToBase64(file); this.requiredPhoto = dataUrl;
+    const img = document.getElementById("required-photo-preview"); img.src = dataUrl; img.style.display = "block";
+  },
+    confirmRequiredPhoto(){
+    if(!this.requiredPhoto){
+    toast("Foto unit wajib diambil","error");return;}
+    Modal.close("modal-required-photo");
+    Checklist.openFor(this.pendingPointId);
   },
 };
 
