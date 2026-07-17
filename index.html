@@ -1222,13 +1222,13 @@ const Views = {
       return `<div class="pin status-${s}
       ${p.type !== 'APAR'? 'pin-hydrant': ''}" style="left:${p.x}%;top:${p.y}%;" data-point-id="${p.id}" onclick="${clickAction}" title="${escapeHtml(TYPE_LABEL[p.type])} #${escapeHtml(p.number)}">
         <div class="pin-icon" style="background:${s==='red'?'var(--red-500)':s==='green'?'var(--green-500)':'var(--orange-500)'}">${iconFor(p.type)}</div>
-        <div class="pin-label">${p.type === "APAR"? "A": "H"} -${escapeHtml(p.number)}</div>
-      </div>`;
+        <div class="pin-label">${p.type === "APAR"? "A": "H"}-${escapeHtml(p.number)}</div>
+        </div>`;
     }).join("");
 
     const adminTools = Auth.isAdmin() ? `
       <button class="btn btn-dark btn-sm" onclick="Admin.togglePlaceMode()" id="btn-place-mode">+ Tambah Titik di Peta</button>
-      <button class="btn btn-ghost btn-sm" id="btn-drag-lock" onclick="MapViewer.toggleDrag()">🔒 Posisi Terkunci</button>
+      <button class="btn btn-ghost btn-sm" id="btn-drag-lock" style="background:#12b76a;color:white;border:none;"onclick="MapViewer.toggleDrag()">🔒 Posisi Terkunci</button>
       <button class="btn btn-ghost btn-sm" onclick="App.go('admin-maps')">Ganti Denah</button>
     ` : "";
 
@@ -1451,7 +1451,15 @@ const MapViewer = {
   placing: false,
   toggleDrag(){this.dragUnlocked = !this.dragUnlocked;
   const btn = document.getElementById("btn-drag-lock");
-  if(btn){btn.textContent = this.dragUnlocked? "🔓 Posisi Tidak Terkunci" : "🔒 Posisi Terkunci";}
+  if(!btn) return;
+  if(this.dragUnlocked){btn.textContent = "🔓 Posisi Tidak Terkunci";
+  btn.style.background = "#e5484d";
+  btn.style.color = "#ffffff";
+  btn.style.border = "none";
+  }else{btn.textContent = "🔒 Posisi Terkunci";
+  btn.style.background = "#12b76a";
+  btn.style.color = "#ffffff";
+  btn.style.border = "none";}
 },
   afterRender(){
     const canvas = document.getElementById("map-canvas");
@@ -1936,7 +1944,8 @@ const Report = {
       <p style="font-size:13px;"><b>Periode:</b> ${MONTH_NAMES[rec.month]} ${rec.year} &nbsp; <b>Checker:</b> ${escapeHtml(rec.checkerName)} (${rec.checkerRole}) &nbsp; <b>Waktu:</b> ${new Date(rec.timestamp).toLocaleString("id-ID")}</p>
       <table><thead><tr><th>Item</th><th>Kondisi</th></tr></thead><tbody>${itemsHtml}</tbody></table>
       ${rec.notes?`<p style="font-size:13px;margin-top:12px;"><b>Catatan:</b> ${escapeHtml(rec.notes)}</p>`:""}
-      ${rec.photo?`<img src="${rec.photo}" style="margin-top:10px;max-height:200px;border-radius:8px;border:1px solid var(--border);">`:""}
+      ${rec.attendancePhoto?`<div style="margin-top:14px;"><b>Foto Kehadiran</b><br><img src="${rec.attendancePhoto}"></div>`:""}
+      ${rec.photo?`<div style="margin-top:14px;"><b>Foto Evidence</b><br><img src="${rec.photo}"></div>`:""}
     `;
     Modal.open("modal-record-detail");
   },
