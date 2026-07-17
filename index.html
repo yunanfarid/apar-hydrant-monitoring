@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>SIAPA • Sistem Inspeksi APAR & Hydrant</title>
+<title>SIAPA • Sistem Inspeksi Alat Pemadam Api</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <style>
 /* =====================================================================
-   SIAPA — Sistem Inspeksi APAR & Hydrant
+   SIAPA — Sistem Inspeksi Alat Pemadam Api
    -------------------------------------------------------------------
    Desain: tema industrial safety. Navy gelap untuk struktur, amber utk
    aksi utama, merah/hijau/oranye utk status pemeriksaan.
@@ -205,11 +205,7 @@ a{color:inherit;}
   position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   overflow:auto;max-height:74vh;
 }
-.map-canvas{
-  position:relative;
-  display:inline-block;
-  min-width:100%;
-  touch-action:none;
+.map-canvas{position:relative; display:inline-block; min-width:100%; touch-action:none;
 }
 .map-canvas img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;}
 .map-empty{padding:70px 20px;text-align:center;color:var(--text-500);}
@@ -279,30 +275,13 @@ a{color:inherit;}
   background:var(--amber-500);box-shadow:0 10px 24px -8px rgba(245,165,36,0.7);
   display:flex;align-items:center;justify-content:center;z-index:40;border:none;
 }
-.map-zoom-controls{
-  position:fixed;
-  bottom:100px;
-  right:26px;
-  z-index:40;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+.map-zoom-controls{ position:fixed; bottom:100px; right:26px; z-index:40; display:none; flex-direction:column; gap:8px;
 }
 
-.zoom-btn{
-  width:48px;
-  height:48px;
-  border:none;
-  border-radius:50%;
-  background:white;
-  font-size:24px;
-  font-weight:bold;
-  cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+.zoom-btn{ width:48px; height:48px; border:none; border-radius:50%; background:var(--navy-900); color:white; font-size:24px; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25);
 }
 
-.zoom-btn:hover{
-  background:#f2f2f2;
+.zoom-btn:hover{background:var(--navy-800);
 }
 .scan-fab svg{width:26px;height:26px;color:#241300;}
 #scanner-view{width:100%;border-radius:12px;overflow:hidden;background:#000;min-height:280px;}
@@ -371,106 +350,19 @@ tr:hover td{background:#fafbfc;}
 @media (min-width:901px){
   .mobile-nav{display:none;}
 }
-#mobile-menu-btn{
-
-  display:flex;
-
-  width:42px;
-  height:42px;
-
-  border:none;
-  border-radius:10px;
-
-  background:var(--navy-900);
-
-  color:white;
-
-  align-items:center;
-  justify-content:center;
-
-  font-size:24px;
-  font-weight:bold;
-
-}
 
 @media (max-width:900px){
-
-  #mobile-menu-btn{
-
-    display:flex;
-
-    width:42px;
-    height:42px;
-
-    border:none;
-    border-radius:10px;
-
-    background:white;
-
-    align-items:center;
-    justify-content:center;
-
-    font-size:24px;
-    font-weight:bold;
-
-  }
-
+#mobile-menu-btn{display:flex; width:42px; height:42px; border:none; border-radius:10px; background:var(--navy-900); color:white; align-items:center; justify-content:center; font-size:24px; font-weight:bold;}
 }
-#mobile-drawer{
-
-  position:fixed;
-
-  top:0;
-  left:-260px;
-
-  width:240px;
-  height:100vh;
-
-  background:var(--navy-900);
-
-  color:white;
-
-  z-index:999;
-
-  transition:0.3s;
-
-  padding-top:60px;
-
+#mobile-drawer{position:fixed; top:0; left:-260px; width:240px; height:100vh; background:var(--navy-900); color:white; z-index:999; transition:0.3s; padding-top:60px;
 }
-
-#mobile-drawer.open{
-
-  left:0;
-
+#mobile-drawer.open{left:0;
 }
-
-#mobile-drawer div{
-
-  padding:16px 20px;
-
-  border-bottom:1px solid rgba(255,255,255,0.1);
-
-  cursor:pointer;
-
+#mobile-drawer div{padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.1); cursor:pointer;
 }
-#drawer-overlay{
-
-  display:none;
-
-  position:fixed;
-
-  inset:0;
-
-  background:rgba(0,0,0,0.4);
-
-  z-index:998;
-
+#drawer-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:998;
 }
-
-#drawer-overlay.show{
-
-  display:block;
-
+#drawer-overlay.show{display:block;
 }
 </style>
 </head>
@@ -485,7 +377,7 @@ tr:hover td{background:#fafbfc;}
       </div>
       <div>
         <h1>SIAPA</h1>
-        <p>Sistem Inspeksi APAR & Hydrant</p>
+        <p>Sistem Inspeksi Alat Pemadam Api</p>
       </div>
     </div>
     <div id="login-error" class="login-error hidden"></div>
@@ -536,7 +428,7 @@ tr:hover td{background:#fafbfc;}
   </nav>
 
   <div class="main-col">
-    <div class="topbar"><button id="mobile-menu-btn"onclick="MobileMenu.toggle()"></button>
+    <div class="topbar"><button id="mobile-menu-btn"onclick="MobileMenu.toggle()">☰</button>
       <div>
         <h2 id="topbar-title">Dashboard</h2>
         <div class="sub" id="topbar-sub">Ringkasan status pemeriksaan</div>
@@ -580,21 +472,21 @@ tr:hover td{background:#fafbfc;}
 </div>
 <div id="mobile-drawer">
 
-  <div onclick="App.go('dashboard');MobileMenu.close();">
+<div onclick="App.go('dashboard');MobileMenu.close();">
     Dashboard
-  </div>
+</div>
 
-  <div onclick="App.go('map')">
+<div onclick="App.go('map');MobileMenu.close();">
     Peta
-  </div>
+</div>
 
-  <div onclick="App.go('report')">
+<div onclick="App.go('report');MobileMenu.close();">
     Riwayat
-  </div>
+</div>
 
-  <div onclick="Auth.logout()">
+<div onclick="Auth.logout();MobileMenu.close();">
     Logout
-  </div>
+</div>
 
 </div>
 <div class="toast-wrap" id="toast-wrap"></div>
@@ -988,56 +880,37 @@ function statusOf(pointId, records, year, month){
   return hasBad ? "orange" : "green";
 }
 const MobileMenu = {
-
   open(){
-
     document
       .getElementById("mobile-drawer")
       .classList.add("open");
-
     document
       .getElementById("drawer-overlay")
       .classList.add("show");
-
     document
       .getElementById("mobile-menu-btn")
       .innerHTML = "✕";
-
   },
-
   close(){
-
     document
       .getElementById("mobile-drawer")
       .classList.remove("open");
-
     document
       .getElementById("drawer-overlay")
       .classList.remove("show");
-
     document
       .getElementById("mobile-menu-btn")
       .innerHTML = "☰";
-
   },
-
   toggle(){
-
     const drawer =
       document.getElementById("mobile-drawer");
-
     if(drawer.classList.contains("open")){
-
       this.close();
-
     }else{
-
       this.open();
-
     }
-
   }
-
 };
 const Modal = {
   open(id){ document.getElementById(id).classList.add("active"); },
@@ -1207,6 +1080,8 @@ const App = {
     else if(this.view==="admin-barcode") root.innerHTML = Views.adminBarcode();
     else if(this.view==="admin-users") root.innerHTML = Views.adminUsers();
     else if(this.view==="admin-connection") root.innerHTML = Views.adminConnection();
+    const zoomControls = document.getElementById("map-zoom-controls");
+    if(zoomControls){ zoomControls.style.display = this.view === "mapdetail" ? "flex" : "none"; }
     if(this.view==="mapdetail") MapViewer.afterRender();
     if(this.view==="admin-barcode") Barcode.afterRender();
   },
@@ -1318,12 +1193,12 @@ const Views = {
     return `
     <div class="mapview-toolbar">
       <button class="btn btn-ghost btn-sm" onclick="App.go('map')">← Semua Peta</button>
-      <div class="legend">
-        <span><i style="background:var(--red-500)"></i>Belum dicek (${redC})</span>
-        <span><i style="background:var(--orange-500)"></i>Perlu perhatian (${orangeC})</span>
-        <span><i style="background:var(--green-500)"></i>Sudah dicek (${greenC})</span>
-      </div>
-      <div class="flex gap-8">${adminTools}</div>
+      <div class="legend compact">
+      <span><i style="background:var(--red-500)"></i>Belum ${redC}</span>
+      <span><i style="background:var(--orange-500)"></i>Perhatian ${orangeC}</span>
+      <span><i style="background:var(--green-500)"></i>Selesai ${greenC}</span>
+    </div>
+    <div class="flex gap-8">${adminTools}</div>
     </div>
     <div id="map-place-hint" class="map-place-hint hidden">
       <span>📍 Mode tambah titik aktif — klik lokasi pada peta untuk menempatkan APAR/Hydrant baru.</span>
@@ -1469,111 +1344,66 @@ const Views = {
    MAP VIEWER — render pin, klik utk isi checklist, mode tambah titik admin
 ===================================================================== */
 const MapZoom = {
-
   scale : 1,
   x : 0,
   y : 0,
-  
-apply(){
-
+  apply(){
   const canvas =
       document.getElementById("map-canvas");
-
   if(!canvas) return;
-
   canvas.style.transform =
       `translate(${this.x}px, ${this.y}px)
        scale(${this.scale})`;
-
   canvas.style.transformOrigin =
       "top left";
-
-  document
-      .querySelectorAll(".pin")
-      .forEach(pin=>{
-
-          pin.style.transform =
-              `translate(-50%,-100%)
-               scale(${1 / this.scale})`;
-
+  document.querySelectorAll(".pin")
+      .forEach(pin=>{ pin.style.transform = `translate(-50%,-100%) scale(${1 / this.scale})`;
       });
-
-},
-
+  },
   zoomIn(){
-
     this.scale += 0.25;
-
     if(this.scale > 3)
       this.scale = 3;
-
     this.apply();
-
   },
-
   zoomOut(){
-
     this.scale -= 0.25;
-
     if(this.scale < 1)
       this.scale = 1;
-
     this.apply();
-
   },
-
   reset(){
-
     this.scale = 1;
     this.x = 0;
     this.y = 0;
-
     this.apply();
-
   }
-
 };
 const MapViewer = {
   enableTouchPan(){
-
   const canvas =
     document.getElementById("map-canvas");
-
   if(!canvas) return;
-
   let startX;
   let startY;
-
   canvas.addEventListener("touchstart", (e)=>{
-
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-
   });
-
   canvas.addEventListener("touchmove", (e)=>{
-
     if(MapZoom.scale <= 1)
       return;
-
     e.preventDefault();
-
     const currentX =
       e.touches[0].clientX;
-
     const currentY =
       e.touches[0].clientY;
-
     MapZoom.x += currentX - startX;
     MapZoom.y += currentY - startY;
-
     startX = currentX;
     startY = currentY;
-
     MapZoom.apply();
-
   });
-
 },
   placing: false,
   afterRender(){
@@ -1937,7 +1767,7 @@ const Scanner = {
   instance: null,
   open(){Modal.open("modal-scanner");
     if(typeof Html5Qrcode === "undefined"){
-      document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Pustaka scanner gagal dimuat (perlu koneksi internet). Gunakan input kode manual di bawah.</p>';
+      document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Pustaka scanner gagal dimuat (perlu koneksi internet).</p>';
       return;
     }
     this.instance = new Html5Qrcode("scanner-view");
