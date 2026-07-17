@@ -93,7 +93,7 @@ a{color:inherit;}
 }
 .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:26px;}
 .login-brand .logo{
-  width:46px;height:46px;border-radius:12px;
+  width:46px;height:46px;border-radius:12px;font-size:24px;
   background:linear-gradient(145deg,var(--amber-500),var(--red-500));
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   box-shadow:0 6px 16px -6px rgba(229,72,77,0.5);
@@ -218,6 +218,10 @@ a{color:inherit;}
   width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
   display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.35);
   border:2px solid #fff;
+}
+.pin-hydrant .pin-icon{border:3px solid #3b82f6;
+}
+.pin-hydrant .pin-label{background:#3b82f6;
 }
 .pin .pin-icon svg{transform:rotate(45deg);width:15px;height:15px;}
 .pin.status-red .pin-icon{background:var(--red-500);}
@@ -383,9 +387,7 @@ tr:hover td{background:#fafbfc;}
 <div id="login-screen">
   <div class="login-card">
     <div class="login-brand">
-      <div class="logo">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2c-1 3-4 4.5-4 8.5A4 4 0 0 0 12 14.5a4 4 0 0 0 4-4C16 6.5 13 5 12 2Z" fill="#fff"/><path d="M12 8c-.5 1.5-2 2-2 4a2 2 0 0 0 4 0c0-2-1.5-2.5-2-4Z" fill="#fff" opacity=".7"/></svg>
-      </div>
+      <div class="logo">🛡️</div>
       <div>
         <h1>SIAPA</h1>
         <p>Sistem Inspeksi Alat Pemadam Api</p>
@@ -413,7 +415,7 @@ tr:hover td{background:#fafbfc;}
 <div id="app">
   <div class="mobile-topbar">
     <div class="flex items-center gap-8">
-      <div class="logo" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(145deg,var(--amber-500),var(--red-500));"></div>
+      <div class="logo" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(145deg,var(--amber-500),var(--red-500));display:flex;align-items:center;justify-content:center;font-size:16px;">🛡️</div>
       <b style="font-size:14px;">SIAPA</b>
     </div>
     <button class="icon-btn" style="background:var(--navy-800);color:#fff;" onclick="Auth.logout()">
@@ -423,9 +425,7 @@ tr:hover td{background:#fafbfc;}
 
   <nav class="sidebar">
     <div class="sidebar-brand">
-      <div class="logo">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2c-1 3-4 4.5-4 8.5A4 4 0 0 0 12 14.5a4 4 0 0 0 4-4C16 6.5 13 5 12 2Z" fill="#fff"/></svg>
-      </div>
+      <div class="logo">🛡️</div>
       <div><b>SIAPA</b><span>APAR & Hydrant</span></div>
     </div>
     <div id="nav-list"></div>
@@ -1219,9 +1219,10 @@ const Views = {
       const clickAction = Auth.isAdmin()
           ? `Checklist.openFor('${p.id}')`
           : `Checklist.vendorScanRequired()`;
-      return `<div class="pin status-${s}" style="left:${p.x}%;top:${p.y}%;" data-point-id="${p.id}" onclick="${clickAction}" title="${escapeHtml(TYPE_LABEL[p.type])} #${escapeHtml(p.number)}">
+      return `<div class="pin status-${s}
+      ${p.type !== 'APAR'? 'pin-hydrant': ''}" style="left:${p.x}%;top:${p.y}%;" data-point-id="${p.id}" onclick="${clickAction}" title="${escapeHtml(TYPE_LABEL[p.type])} #${escapeHtml(p.number)}">
         <div class="pin-icon" style="background:${s==='red'?'var(--red-500)':s==='green'?'var(--green-500)':'var(--orange-500)'}">${iconFor(p.type)}</div>
-        <div class="pin-label">${escapeHtml(p.number)}</div>
+        <div class="pin-label">${p.type === "APAR"? "A": "H"} -${escapeHtml(p.number)}</div>
       </div>`;
     }).join("");
 
