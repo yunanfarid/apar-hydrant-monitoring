@@ -1831,6 +1831,9 @@ const Checklist = {
         checkerName: Auth.current.name,
         checkerRole: Auth.current.role,
       });
+      Scanner.requiredPhoto = null;
+      Scanner.pendingPointId = null;
+      Checklist.currentPhoto = null;
       Modal.close("modal-checklist");
       toast("Pemeriksaan tersimpan ✓", "success");
       App.render();
@@ -1880,7 +1883,7 @@ const Scanner = {
   },
     async onRequiredPhoto(event){
     const file = event.target.files[0]; if(!file) return;
-    const dataUrl = await fileToBase64(file); this.requiredPhoto = dataUrl;
+    const dataUrl = await resizeImage(file); this.requiredPhoto = dataUrl;
     const img = document.getElementById("required-photo-preview"); img.src = dataUrl; img.style.display = "block";
   },
     confirmRequiredPhoto(){
