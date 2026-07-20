@@ -316,6 +316,10 @@ tr:hover td{background:#fafbfc;}
 .tag-opt{padding:8px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-weight:600;color:var(--text-700);}
 .tag-opt.active{border-color:var(--amber-500);background:#fff8ec;color:#a35b06;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;
+}
+@media(max-width:900px){.analytics-grid{grid-template-columns:1fr;}
+}
 .help-text{font-size:11.5px;color:var(--text-500);margin-top:5px;line-height:1.5;}
 .toast-wrap{position:fixed;top:18px;right:18px;z-index:200;display:flex;flex-direction:column;gap:8px;}
 .toast{background:var(--navy-900);color:#fff;padding:12px 16px;border-radius:10px;font-size:13.5px;box-shadow:0 10px 24px -8px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;min-width:220px;animation:toastIn .25s ease;}
@@ -343,6 +347,7 @@ tr:hover td{background:#fafbfc;}
   .content{padding:6px;}
   .topbar{padding:8px 12px;}
   .row2{grid-template-columns:1fr;}
+  .analytics-grid{grid-template-columns:1fr;}
   .mobile-topbar{
     display:none;position:sticky;top:0;z-index:30;background:var(--navy-900);color:#fff;
     align-items:center;justify-content:space-between;padding:12px 14px;
@@ -1194,7 +1199,56 @@ const Views = {
     }
     const belum = total - done;
     const pct = total ? Math.round((done/total)*100) : 0;
-
+    const findingItems = {};
+    const findingLocations = {};
+    App.records.filter(r => r.year === year && r.month === month).forEach(rec => {
+    (rec.items || []).forEach(item => {
+    if(item.status === "R" || item.status === "T.A"){
+    findingItems[item.name] = (findingItems[item.name] || 0) + 1;
+    const point = App.points.find(p => p.id === rec.pointId);
+    if(point){const mapName = App.maps.find(m => m.id === point.mapId)?.name || "-";
+    findingLocations[mapName] = (findingLocations[mapName] || 0) + 1;}}
+    });
+    });
+    const topItems = Object.entries(findingItems).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const topLocations = Object.entries(findingLocations).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const topItemsHtml = topItems.length ? topItems.map((x,i)=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
+    <span>${i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1)+"."}${x[0]}</span>
+    <b>${x[1]}</b>
+    </div>
+    `).join("") : `<div class="muted">Belum ada temuan</div>`;
+    const topLocationsHtml = topLocations.length ?
+    topLocations.map((x,i)=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
+    <span>
+    ${i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1)+"."} ${x[0]}</span>
+    <b>${x[1]}</b>
+    </div>`).join("") : `<div class="muted">Belum ada temuan</div>`;
+        const monthlyFindings = [];
+    for(let m=1; m<=12; m++){
+    let totalFinding = 0;
+    App.records.filter(r => r.year === year && r.month === m).forEach(rec => {
+    totalFinding += (rec.items || []).filter(i => i.status === "R" || i.status === "T.A").length;
+    });
+    monthlyFindings.push({month:m, count:totalFinding});
+    }
+    const maxFinding = Math.max(...monthlyFindings.map(x => x.count),1
+    );
+    const trendHtml = monthlyFindings.map(x=>{
+    const width = (x.count / maxFinding) * 100;
+    return `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+    <div style="width:40px;font-size:12px;font-weight:600;">
+    ${MONTH_SHORT[x.month]} </div>
+    <div style="flex:1;background:#eef0f2;height:18px;border-radius:20px;overflow:hidden;">
+    <div style="width:${width}%;height:100%;background:#f79009;"></div>
+    </div>
+    <div style="width:30px;text-align:right;font-weight:700;">
+    ${x.count}
+    </div>
+    </div>`;
+    }).join("");
     const cards = App.maps.map(m=>{
       const mPoints = points.filter(p=>p.mapId===m.id);
       const mDone = mPoints.filter(p=>statusOf(p.id,App.records,year,month)!=="red").length;
@@ -1226,9 +1280,21 @@ const Views = {
       <span class="mono muted" style="font-size:12px;">${pct}% keseluruhan</span>
     </div>
     ${total===0 ? `<div class="empty-state">Belum ada titik APAR/Hydrant terdaftar.${Auth.isAdmin()?' Buka <b>Kelola Titik</b> untuk mulai menambahkan.':''}</div>` : `<div class="map-grid">${cards}</div>`}
-    `;
+    <div class="analytics-grid" style="margin-top:20px;">
+    <div class="card"style="padding:14px 20px;">
+    <h3 style="margin:0 0 6px;font-size:15.5px;">Top Item Temuan</h3>
+    <p class="muted"style="margin:0 0 10px;font-size:13px;">Item paling sering rusak atau tidak ada</p>
+    ${topItemsHtml}</div>
+    <div class="card"style="padding:14px 20px;">
+    <h3 style="margin:0 0 6px;font-size:15.5px;">Top Lokasi Temuan</h3>
+    <p class="muted"style="margin:0 0 10px;font-size:13px;">Lokasi dengan temuan terbanyak</p>
+    ${topLocationsHtml}</div>
+    </div>
+    <div class="card"style="margin-top:5px;">
+    <h3 style="margin:0 0 6px;font-size:15.5px;">Trend Temuan Bulanan</h3>
+    <p class="muted"style="margin:0 0 16px;font-size:13px;">Jumlah item Rusak / Tidak Ada sepanjang tahun ${year}</p>
+    ${trendHtml}</div>`;
   },
-
   mapList(){
     const cards = App.maps.map(m=>{
       const thumbStyle = m.image ? `background-image:url('${m.image}')` : "";
