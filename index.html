@@ -47,6 +47,8 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 button{font-family:inherit;cursor:pointer;}
+select,option,input[type="file"]{cursor:pointer;
+}
 input,select,textarea{font-family:inherit;}
 img{max-width:100%;}
 a{color:inherit;}
@@ -105,6 +107,8 @@ a{color:inherit;}
 .field input,.field select,.field textarea{
   width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--border);
   font-size:14.5px;transition:border-color .15s, box-shadow .15s;background:#fbfcfd;
+}
+.field select:hover{border-color:var(--amber-500);
 }
 .field input:focus,.field select:focus,.field textarea:focus{
   outline:none;border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(245,165,36,0.18);background:#fff;
@@ -378,6 +382,17 @@ tr:hover td{background:#fafbfc;}
 }
 @media(max-width:900px){
   #mobile-menu-btn{ display:flex; }
+}
+hr{border:none; border-top:2px solid #000; margin:30px 0;
+}
+@media print{body{margin:20px;}
+h1,h2{page-break-after:avoid;}
+}
+.nav-item,.map-card,.pin,.tag-opt,.icon-btn,.barcode-card,#mobile-drawer div,.user-chip,.scan-fab,.zoom-btn,.close-x,.logout-btn{cursor:pointer;
+}
+.nav-item,.map-card,.pin,.tag-opt,.icon-btn,.barcode-card{transition:all .15s ease;
+}
+.map-card:hover,.tag-opt:hover,.icon-btn:hover{transform:translateY(-1px);
 }
 </style>
 </head>
@@ -1289,6 +1304,7 @@ const Views = {
         <div class="flex gap-8">
           <button class="btn btn-ghost btn-sm" onclick="Report.exportCsv()">⬇ Export CSV</button>
           <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Cetak</button>
+          <button class="btn btn-primary btn-sm" onclick="Report.exportAuditPdf()">📄 PDF Audit</button>
         </div>
       </div>
       <div class="flex gap-8" style="margin-bottom:14px;flex-wrap:wrap;">
@@ -1926,6 +1942,20 @@ const Report = {
       if(typeF && p.type!==typeF) return false;
       return true;
     });
+    rows.sort((a,b)=>{
+    const statusRank = {orange : 1, green : 2,  red : 3};
+    const typeRank = {APAR : 1, HYDRANT_INDOOR : 2, HYDRANT_OUTDOOR : 3};
+    const statusA = statusOf(a.id, App.records, year, month);
+    const statusB = statusOf(b.id, App.records, year, month);
+    if(statusRank[statusA] !== statusRank[statusB]){
+    return (statusRank[statusA] - statusRank[statusB]);
+    }
+    if(typeRank[a.type] !== typeRank[b.type]){
+    return (typeRank[a.type] - typeRank[b.type]);
+    }
+    return (Number(a.number) - Number(b.number)
+    );
+    });
     const mapName = id => App.maps.find(m=>m.id===id)?.name || "-";
     let html = `<div style="overflow-x:auto;"><table><thead><tr><th>Jenis</th><th>Unit</th><th>Lokasi</th><th>Status</th><th>Checker</th><th>Waktu</th><th></th></tr></thead><tbody>`;
     let count = 0;
@@ -1989,6 +2019,164 @@ const Report = {
     a.href = url; a.download = `Laporan_APAR_Hydrant_${MONTH_NAMES[month]}_${year}.csv`;
     a.click(); URL.revokeObjectURL(url);
   },
+  exportAuditPdf(){
+    const { year, month } = App.period;
+    const printDate = new Date().toLocaleDateString("id-ID",
+    {day:"2-digit", month:"long", year:"numeric"});
+    const total = App.points.length;
+    let checked = 0;
+    let findings = 0;
+    App.points.forEach(p=>{
+    const rec = App.records.find(
+      r =>
+      r.pointId === p.id &&
+      r.year == year &&
+      r.month == month
+    );
+
+    if(rec){checked++;
+    const hasFinding = rec.items.some(
+      i => i.status === "R" || i.status === "T.A");
+    if(hasFinding){findings++;}
+    }
+  });
+  const notChecked = total - checked;
+  let detailRows = "";
+  let findingRows = "";
+  App.points.forEach(p=>{
+  const rec = App.records.find(
+    r =>
+    r.pointId === p.id &&
+    r.year == year &&
+    r.month == month
+  );
+
+  const mapName = App.maps.find(
+      m => m.id === p.mapId
+    )?.name || "-";
+
+  const status = !rec
+      ? "BELUM DICEK"
+      : rec.items.some(
+          i =>
+            i.status === "R" ||
+            i.status === "T.A"
+        )
+      ? "TEMUAN"
+      : "BAIK";
+
+  detailRows += `
+    <tr>
+    <td>${TYPE_LABEL[p.type]}</td>
+    <td>${p.number}</td>
+    <td>${mapName}</td>
+    <td>${status}</td>
+    <td>${rec?.checkerName || "-"}</td>
+    <td>${rec ? new Date(rec.timestamp).toLocaleString("id-ID") : "-"}
+    </td>
+    </tr>
+  `;
+  if(rec){
+  const findingItems = rec.items.filter(
+  i => i.status === "R" || i.status === "T.A"
+  );
+  if(findingItems.length){
+  const mapName = App.maps.find(
+  m => m.id === p.mapId)?.name || "-";
+  let findingList = "";
+  findingItems.forEach(item=>{
+  findingList += `
+  <li>${item.name} : ${item.status === "R" ? "Rusak" : "Tidak Ada"}</li>
+  `;
+});
+  findingRows += `
+  <div style="border:1px solid #ccc; padding:12px; margin-bottom:15px; border-radius:6px;">
+    <b>${TYPE_LABEL[p.type]}#${p.number}</b>
+    <br>Lokasi : ${mapName}<br><br>
+    <b>Temuan :</b>
+    <ul>${findingList}</ul>${rec.notes ? `<b>Catatan :</b>
+    <br>${rec.notes}` : ""}
+    ${rec.photo ? `
+    <br><br>
+    <b>Foto Evidence :</b><br><br><img src="${rec.photo}"style="max-width:400px; width:100%; border:1px solid #ddd;">` : ""}
+    </div>
+    `;
+  }
+}
+});
+  const reportWindow = window.open("", "_blank");
+  reportWindow.document.write(`
+  <html>
+  <head>
+  <title>Audit Report</title>
+  <style>body{font-family:Arial,sans-serif; padding:30px; line-height:1.6;}
+  h1{margin-bottom:0;}
+  h2{margin-top:40px;}
+  table{width:100%; border-collapse:collapse; margin-top:10px;}
+  th,td{border:1px solid #ccc; padding:8px;}
+  th{background:#f5f5f5;}
+  </style>
+  </head>
+  <body>
+  <div style="text-align:center;margin-bottom:30px;border-bottom:2px solid #000;padding-bottom:15px;">
+  <h2 style="margin:0;">
+  PT TOYOTA ASTRA MOTOR
+  </h2>
+  <h1 style="margin:10px 0;">LAPORAN INSPEKSI APAR & HYDRANT
+  </h1>
+  <div>SIAPA (Sistem Inspeksi Alat Pemadam Api)
+  </div>
+  </div>
+  <h2>Laporan Audit</h2>
+  <p>Periode : ${MONTH_NAMES[month]} ${year}</p>
+  <table style="width:100%;margin-bottom:20px;">
+  <tr><td width="180">Periode</td>
+  <td>: ${MONTH_NAMES[month]} ${year}</td>
+  </tr>
+  <tr><td>Tanggal Cetak</td><td> : ${printDate}</td></tr>
+  <tr>
+  <td>Dokumen</td><td> : SIAPA-${year}-${month}</td></tr>
+  </table>
+  <table>
+  <tr><td>Total Unit</td><td>${total}</td></tr>
+  <tr><td>Sudah Diperiksa</td><td>${checked}</td></tr>
+  <tr><td>Belum Diperiksa</td><td>${notChecked}</td></tr>
+  <tr><td>Temuan</td><td>${findings}</td></tr>
+  </table>
+  <hr><h2>Detail Pemeriksaan</h2>
+  <table>
+  <thead>
+  <tr><th>Jenis</th><th>Unit</th><th>Lokasi</th><th>Status</th><th>Pemeriksa</th><th>Tanggal</th></tr>
+  </thead>
+  <tbody>${detailRows}</tbody>
+  </table>
+  <hr><h2>Daftar Temuan</h2>
+  ${findingRows || "<p>Tidak ada temuan pada periode ini.</p>"}
+  <br><br><br>
+  <hr>
+  <table style="width:100%;margin-top:50px;border:none;">
+  <tr>
+  <td style="width:50%;border:none;text-align:center;">
+  Dibuat Oleh
+  <br><br><br><br>
+  ____________________
+  <br>${Auth.current.name}</td>
+  <td style="width:50%;border:none;text-align:center;">
+  Diketahui Oleh
+  <br><br><br><br>
+  ____________________
+  <br>
+  SHE / Management
+  </td></tr>
+  </table>
+  </body>
+  </html>
+  `);
+  reportWindow.document.close();
+  setTimeout(()=>{
+  reportWindow.print();
+  },500);
+},
 };
 
 // isi tabel laporan setiap kali view report dirender
