@@ -1986,9 +1986,18 @@ const Scanner = {
   return;}
   try{
   const gps = await this.getCurrentLocation();
-  alert(`Latitude : ${gps.latitude}
-  Longitude : ${gps.longitude}
-  Accuracy : ${gps.accuracy} meter`);
+  const point = App.points.find(p => p.id === this.pendingPointId);
+  console.log("GPS USER", gps);
+  console.log(
+  "GPS ASSET",
+  point.latitude,
+  point.longitude,
+  point.radiusMeter
+  );
+  toast(
+  "GPS berhasil dibaca",
+  "success"
+  );
   }catch(err){
   toast(
   "Gagal mendapatkan lokasi GPS",
