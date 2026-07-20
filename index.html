@@ -2082,7 +2082,7 @@ const Report = {
     );
     });
     const mapName = id => App.maps.find(m=>m.id===id)?.name || "-";
-    let html = `<div style="overflow-x:auto;"><table><thead><tr><th>Jenis</th><th>Unit</th><th>Lokasi</th><th>Status</th><th>Checker</th><th>Waktu</th><th></th></tr></thead><tbody>`;
+    let html = `<div style="overflow-x:auto;"><table><thead><tr><th>Jenis</th><th>Unit</th><th>Lokasi</th><th>Status</th><th>Validasi</th><th>Checker</th><th>Waktu</th><th></th></tr></thead><tbody>`;
     let count = 0;
     for(const p of rows){
       const rec = App.records.find(r=>r.pointId===p.id && r.year===year && r.month===month);
@@ -2095,6 +2095,7 @@ const Report = {
         <td><b>${escapeHtml(p.number)}</b> <span class="mono muted" style="font-size:11px;">${escapeHtml(p.barcode)}</span></td>
         <td>${escapeHtml(mapName(p.mapId))}</td>
         <td>${statusBadge}</td>
+        <td>${rec ? (rec.gpsStatus === "VALID" ? `✅ ${rec.distanceMeter} m`: `❌ ${rec.distanceMeter || "-"} m`): "-"}</td>
         <td>${rec?escapeHtml(rec.checkerName):"-"}</td>
         <td class="muted">${rec?new Date(rec.timestamp).toLocaleString("id-ID"):"-"}</td>
         <td>${rec?`<button class="icon-btn" onclick="Report.viewDetail('${rec.id}')">👁</button>`:""}</td>
@@ -2197,6 +2198,7 @@ const Report = {
     <td>${p.number}</td>
     <td>${mapName}</td>
     <td>${status}</td>
+    <td>${rec? `${rec.distanceMeter || "-"} m ${rec.gpsStatus === "VALID"? "✅": "❌"}`: "-"}</td>
     <td>${rec?.checkerName || "-"}</td>
     <td>${rec ? new Date(rec.timestamp).toLocaleString("id-ID") : "-"}
     </td>
@@ -2272,7 +2274,7 @@ const Report = {
   <hr><h2>Detail Pemeriksaan</h2>
   <table>
   <thead>
-  <tr><th>Jenis</th><th>Unit</th><th>Lokasi</th><th>Status</th><th>Pemeriksa</th><th>Tanggal</th></tr>
+  <tr><th>Jenis</th><th>Unit</th><th>Lokasi</th><th>Status</th><th>Validasi</th><th>Pemeriksa</th><th>Tanggal</th></tr>
   </thead>
   <tbody>${detailRows}</tbody>
   </table>
