@@ -1964,16 +1964,40 @@ const Scanner = {
     document.getElementById("required-photo-preview").style.display = "none";
     Modal.open("modal-required-photo");
   },
+    async getCurrentLocation(){
+    return new Promise((resolve,reject)=>{
+    navigator.geolocation.getCurrentPosition(
+    position=>{
+    resolve({latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy});
+    },
+    error=>{reject(error);},
+    {enableHighAccuracy:true, timeout:10000}
+    );
+    });
+    },
     async onRequiredPhoto(event){
     const file = event.target.files[0]; if(!file) return;
     const dataUrl = await resizeImage(file); this.requiredPhoto = dataUrl;
     const img = document.getElementById("required-photo-preview"); img.src = dataUrl; img.style.display = "block";
   },
-    confirmRequiredPhoto(){
-    if(!this.requiredPhoto){
-    toast("Foto unit wajib diambil","error");return;}
-    Modal.close("modal-required-photo");
-    Checklist.openFor(this.pendingPointId);
+  async confirmRequiredPhoto(){
+  if(!this.requiredPhoto){
+  toast("Foto unit wajib diambil","error");
+  return;}
+  try{
+  const gps = await this.getCurrentLocation();
+  alert(`Latitude : ${gps.latitude}
+  Longitude : ${gps.longitude}
+  Accuracy : ${gps.accuracy} meter`);
+  }catch(err){
+  toast(
+  "Gagal mendapatkan lokasi GPS",
+  "error");
+  return;}
+  Modal.close("modal-required-photo");
+  Checklist.openFor(
+    this.pendingPointId
+  );
   },
   cancelRequiredPhoto(){
     this.requiredPhoto = null;
