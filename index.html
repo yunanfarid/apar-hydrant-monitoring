@@ -1931,6 +1931,14 @@ const Checklist = {
 /* =====================================================================
    SCANNER — scan barcode via kamera (html5-qrcode)
 ===================================================================== */
+function calculateDistance(lat1, lon1, lat2, lon2){
+const R = 6371000;
+const dLat = (lat2 - lat1) * Math.PI / 180;
+const dLon = (lon2 - lon1) * Math.PI / 180;
+const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+return R * c;}
+
 const Scanner = {
   instance: null,
   requiredPhoto : null,
@@ -1987,6 +1995,8 @@ const Scanner = {
   try{
   const gps = await this.getCurrentLocation();
   const point = App.points.find(p => p.id === this.pendingPointId);
+  const distance = calculateDistance(Number(gps.latitude), Number(gps.longitude), Number(point.latitude), Number(point.longitude)
+  );
   console.log("GPS USER", gps);
   console.log(
   "GPS ASSET",
@@ -1995,7 +2005,7 @@ const Scanner = {
   point.radiusMeter
   );
   toast(
-  "GPS berhasil dibaca",
+  `Jarak dari asset : ${Math.round(distance)} meter`,
   "success"
   );
   }catch(err){
