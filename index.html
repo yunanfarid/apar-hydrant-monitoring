@@ -1913,9 +1913,13 @@ const Checklist = {
         photo: photo || "",
         checkerName: Auth.current.name,
         checkerRole: Auth.current.role,
+        distanceMeter: Scanner.lastDistance,
+        gpsStatus: Scanner.lastGpsStatus,
       });
       Scanner.requiredPhoto = null;
       Scanner.pendingPointId = null;
+      Scanner.lastDistance = null;
+      Scanner.lastGpsStatus = null;
       Checklist.currentPhoto = null;
       Modal.close("modal-checklist");
       toast("Pemeriksaan tersimpan ✓", "success");
@@ -1943,6 +1947,8 @@ const Scanner = {
   instance: null,
   requiredPhoto : null,
   pendingPointId : null,
+  lastDistance : null,
+  lastGpsStatus : null,
   open(){Modal.open("modal-scanner");
     if(typeof Html5Qrcode === "undefined"){
       document.getElementById("scanner-view").innerHTML = '<p style="color:#fff;padding:20px;text-align:center;">Pustaka scanner gagal dimuat (perlu koneksi internet).</p>';
@@ -2010,6 +2016,8 @@ const Scanner = {
   Modal.close("modal-required-photo");
   return;
   }
+  this.lastDistance = Math.round(distance);
+  this.lastGpsStatus = "VALID";
   toast(`✅ Lokasi valid (${Math.round(distance)} meter)`,
   "success"
   );
@@ -2026,6 +2034,8 @@ const Scanner = {
   cancelRequiredPhoto(){
     this.requiredPhoto = null;
     this.pendingPointId = null;
+    this.lastDistance = null;
+    this.lastGpsStatus = null;
     document.getElementById("required-photo-input").value = "";
     document.getElementById("required-photo-preview").style.display = "none";
     Modal.close("modal-required-photo");
@@ -2110,6 +2120,7 @@ const Report = {
         <div><h4>${TYPE_LABEL[point.type]} — Unit #${escapeHtml(point.number)}</h4><div class="code">${escapeHtml(point.barcode)} · ${escapeHtml(mapName)}</div></div>
       </div>
       <p style="font-size:13px;"><b>Periode:</b> ${MONTH_NAMES[rec.month]} ${rec.year} &nbsp; <b>Checker:</b> ${escapeHtml(rec.checkerName)} (${rec.checkerRole}) &nbsp; <b>Waktu:</b> ${new Date(rec.timestamp).toLocaleString("id-ID")}</p>
+      <p style="font-size:13px;margin-top:10px;font-weight:600;color:#344054;">Validasi Checker : ${rec.distanceMeter || "-"} meter${rec.gpsStatus === "VALID" ? "✅" : "❌"}</p>
       <table><thead><tr><th>Item</th><th>Kondisi</th></tr></thead><tbody>${itemsHtml}</tbody></table>
       ${rec.notes?`<p style="font-size:13px;margin-top:12px;"><b>Catatan:</b> ${escapeHtml(rec.notes)}</p>`:""}
       ${rec.attendancePhoto?`<div style="margin-top:14px;"><b>Foto Verifikasi Unit</b><br><img src="${rec.attendancePhoto}"></div>`:""}
