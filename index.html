@@ -1995,17 +1995,22 @@ const Scanner = {
   try{
   const gps = await this.getCurrentLocation();
   const point = App.points.find(p => p.id === this.pendingPointId);
-  const distance = calculateDistance(Number(gps.latitude), Number(gps.longitude), Number(point.latitude), Number(point.longitude)
-  );
-  console.log("GPS USER", gps);
-  console.log(
-  "GPS ASSET",
-  point.latitude,
-  point.longitude,
-  point.radiusMeter
-  );
-  toast(
-  `Jarak dari asset : ${Math.round(distance)} meter`,
+  const distance = calculateDistance(Number(gps.latitude), Number(gps.longitude), Number(point.latitude), Number(point.longitude));
+  const radius = Number(point.radiusMeter || 15);
+  if(distance > radius){
+  toast(`❌ Anda berada ${Math.round(distance)} meter dari asset. Maksimum ${radius} meter. Silakan scan ulang barcode.`,"error");
+  this.requiredPhoto = null;
+  this.pendingPointId = null;
+  document.getElementById(
+    "required-photo-input"
+  ).value = "";
+  document.getElementById(
+    "required-photo-preview"
+  ).style.display = "none";
+  Modal.close("modal-required-photo");
+  return;
+  }
+  toast(`✅ Lokasi valid (${Math.round(distance)} meter)`,
   "success"
   );
   }catch(err){
