@@ -1084,6 +1084,7 @@ const NAV_ITEMS = [
   { id:"dashboard", label:"Dashboard", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>' },
   { id:"map", label:"Peta Lokasi", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>' },
   { id:"report", label:"Riwayat & Laporan", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>' },
+  { id:"findings", label:"Daftar Temuan", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1"/></svg>'},
   { id:"admin-maps", label:"Kelola Peta", roles:["admin"], section:"Pengaturan Admin", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/></svg>' },
   { id:"admin-points", label:"Kelola Titik APAR/Hydrant", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' },
   { id:"admin-barcode", label:"Cetak Label Barcode", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="10" y1="5" x2="10" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/><line x1="18" y1="5" x2="18" y2="19"/></svg>' },
@@ -1165,6 +1166,7 @@ const App = {
     const map = { dashboard:["Dashboard","Ringkasan status pemeriksaan bulan berjalan"],
       map:["Peta Lokasi","Pilih lokasi untuk melihat posisi & status APAR/Hydrant"],
       report:["Riwayat & Laporan","Rekap seluruh hasil pemeriksaan"],
+      findings:["Daftar Temuan", "Monitoring temuan OPEN dan CLOSED"],
       "admin-maps":["Kelola Peta","Upload & atur denah lokasi"],
       "admin-points":["Kelola Titik APAR/Hydrant","Tempatkan & atur data setiap unit"],
       "admin-barcode":["Cetak Label Barcode","Cetak label untuk ditempel di unit fisik"],
@@ -1188,6 +1190,7 @@ const App = {
     else if(this.view==="map") root.innerHTML = Views.mapList();
     else if(this.view==="mapdetail") root.innerHTML = Views.mapDetail(this.activeMapId);
     else if(this.view==="report") root.innerHTML = Views.report();
+    else if(this.view==="findings") root.innerHTML = Views.findings();
     else if(this.view==="admin-maps") root.innerHTML = Views.adminMaps();
     else if(this.view==="admin-points") root.innerHTML = Views.adminPoints();
     else if(this.view==="admin-barcode") root.innerHTML = Views.adminBarcode();
@@ -1416,7 +1419,37 @@ const Views = {
       <div id="report-table-wrap"></div>
     </div>`;
   },
-
+  findings(){
+  const rows = App.findings.sort((a,b)=>{
+  if(a.status==="OPEN" && b.status==="CLOSED")
+  return -1;
+  if(a.status==="CLOSED" && b.status==="OPEN")
+  return 1; return 0;}).map(f=>{
+  const statusBadge = f.status==="OPEN" ? '<span class="badge orange">OPEN</span>' : '<span class="badge green">CLOSED</span>';
+  return `
+  <tr><td>${f.barcode}</td>
+  <td>${f.itemName}</td>
+  <td>${f.findingType}</td>
+  <td>${statusBadge}</td>
+  <td>${f.openDate ? new Date(f.openDate).toLocaleDateString("id-ID"): "-"}</td>
+  <td>${f.status==="OPEN" ? `
+  <button class="btn btn-success btn-sm" onclick="Finding.close('${f.id}')">Tutup</button>`: "-"}</td>
+  </tr>`;}).join("");
+  return `
+  <div class="card">
+    <div class="card-head">
+      <div><h3>Daftar Temuan</h3><p>Monitoring status temuan inspeksi</p>
+    </div>
+    </div>
+    <table>
+    <thead>
+    <tr>
+    <th>Barcode</th><th>Item</th><th>Temuan</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+    </table>
+    </div>`;
+  },
   adminMaps(){
     const rows = App.maps.map(m=>`
       <div class="card" style="display:flex;gap:16px;align-items:center;">
@@ -2103,6 +2136,15 @@ const Barcode = {
 /* =====================================================================
    REPORT — riwayat & laporan
 ===================================================================== */
+const Finding = {
+async close(id){
+if(!confirm("Tutup temuan ini?")
+){return;}
+await Store.closeFinding(id,
+{closedBy:Auth.current.name});
+toast("Temuan ditutup","success");
+App.render();}
+};
 const Report = {
   refreshTable(){
     const mapF = document.getElementById("filter-map").value;
