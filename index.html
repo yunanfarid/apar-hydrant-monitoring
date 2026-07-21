@@ -768,6 +768,7 @@ function defaultDB(){
     ],
     points: [],
     records: [],
+    findings: [],
   };
 }
 
@@ -902,6 +903,37 @@ const Store = {
     }
     return await this._gas("saveRecord", record);
   },
+// ---------- FINDINGS ----------
+async getFindings(){if(this.mode==="local")
+return this._db.findings || [];
+return await this._gas("getFindings",{});
+},
+
+async saveFinding(finding){if(this.mode==="local"){
+if(!this._db.findings){this._db.findings = [];}
+finding.id = "fd_" + Date.now();
+this._db.findings.push(finding);
+this._save();
+return finding;}
+return await this._gas("saveFinding",finding);
+},
+
+async closeFinding(id,data={}){
+if(this.mode==="local"){
+const f = (this._db.findings||[]).find(x=>x.id===id);
+if(f){f.status="CLOSED";
+f.closeDate= new Date().toISOString();
+f.closePhoto= data.closePhoto || "";
+f.closedBy= data.closedBy || "";
+}
+
+this._save();
+return f;
+}
+
+return await this._gas("closeFinding",{id,...data}
+);
+}
 };
 </script>
 <script>
@@ -1062,11 +1094,11 @@ const NAV_ITEMS = [
 const App = {
   view: "dashboard",
   period: { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
-  maps: [], points: [], records: [], users: [],
+  maps: [], points: [], records: [], findings: [], users: [],
   activeMapId: null,
 
   async loadAll(){
-    [this.maps, this.points, this.records] = await Promise.all([Store.getMaps(), Store.getPoints(), Store.getRecords()]);
+    [this.maps, this.points, this.records, this.findings] = await Promise.all([Store.getMaps(), Store.getPoints(), Store.getRecords(), Store.getFindings()]);
     if(Auth.isAdmin()) this.users = await Store.getUsers();
   },
 
@@ -1903,7 +1935,7 @@ const Checklist = {
       let attendancePhoto = Scanner.requiredPhoto;
       if(photo && photo.startsWith("data:") && Store.mode==="gas"){ photo = await Store.uploadImage(photo);}
       if(attendancePhoto && attendancePhoto.startsWith("data:") && Store.mode==="gas"){ attendancePhoto = await Store.uploadImage(attendancePhoto);}
-      await Store.saveRecord({
+    const savedRecord = await Store.saveRecord({
         pointId: point.id,
         year: App.period.year,
         month: App.period.month,
@@ -1916,6 +1948,21 @@ const Checklist = {
         distanceMeter: Scanner.lastDistance,
         gpsStatus: Scanner.lastGpsStatus,
       });
+      for(const item of results){if(
+      item.status !== "R" &&
+      item.status !== "T.A"){continue;}
+      await Store.saveFinding({
+      recordId: savedRecord.id,
+      pointId: point.id,
+      barcode: point.barcode,
+      unitNumber: point.number,
+      mapName: App.maps.find(m => m.id===point.mapId)?.name || "-",
+      itemName: item.name,
+      findingType: item.status==="R" ? "RUSAK" : "TIDAK ADA",
+      status: "OPEN",
+      openDate: new Date().toISOString()
+      });
+      }
       Scanner.requiredPhoto = null;
       Scanner.pendingPointId = null;
       Scanner.lastDistance = null;
