@@ -399,6 +399,14 @@ h1,h2{page-break-after:avoid;}
 }
 .map-card:hover,.tag-opt:hover,.icon-btn:hover{transform:translateY(-1px);
 }
+#loading-overlay{position:fixed;inset:0;background:rgba(15,26,36,.35);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;
+}
+.loading-box{background:white;padding:24px 32px;border-radius:16px;text-align:center;min-width:180px;box-shadow:0 15px 40pxrgba(0,0,0,.15);
+}
+.loader{width:46px;height:46px;border:5px solid #eee;border-top:5px solid #f5a524;border-radius:50%;animation:spin 1s linear infinite;margin:auto;margin-bottom:12px;
+}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}
+}
 </style>
 </head>
 <body>
@@ -715,6 +723,26 @@ h1,h2{page-break-after:avoid;}
     </div>
   </div>
 </div>
+
+<div class="modal-overlay"id="modal-close-finding">
+  <div class="modal-box">
+    <div class="modal-head">
+    <h3>Tutup Temuan</h3>
+      <button class="close-x"onclick="Modal.close('modal-close-finding')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden"id="close-finding-id">
+      <div class="field">
+        <label>Foto Perbaikan</label>
+        <input type="file"id="close-photo-input"accept="image/*"capture="environment">
+        <div class="help-text">Bisa ambil foto langsung atau pilih dari galeri.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary"onclick="Finding.submitClose()">Simpan & Tutup</button>
+    </div>
+  </div>
+</div>
 <script>
 /* =====================================================================
    SIAPA — APP CONFIG
@@ -948,6 +976,14 @@ function toast(msg, type="default"){
   wrap.appendChild(el);
   setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .3s"; setTimeout(()=>el.remove(),300); }, 3200);
 }
+const Loading = {
+show(text = "Loading..."){
+  document.getElementById("loading-text").textContent = text;
+document.getElementById("loading-overlay").classList.remove("hidden");
+},
+hide(){document.getElementById("loading-overlay").classList.add("hidden");
+}
+};
 function escapeHtml(str){
   if(str===undefined||str===null) return "";
   return String(str).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1180,6 +1216,8 @@ const App = {
     const [title, sub] = this.titleFor(this.view);
     document.getElementById("topbar-title").textContent = title;
     document.getElementById("topbar-sub").textContent = sub;
+    const periodPicker = document.querySelector(".period-picker");
+    if(periodPicker){periodPicker.style.display = this.view === "findings" ? "none" : "flex";}
     document.getElementById("sb-name").textContent = Auth.current.name;
     document.getElementById("sb-role").textContent = Auth.current.role;
     document.getElementById("sb-avatar").textContent = Auth.current.name.charAt(0).toUpperCase();
@@ -1438,6 +1476,7 @@ const Views = {
   <td>${f.openDate ? new Date(f.openDate).toLocaleDateString("id-ID"): "-"}</td>
   <td>${f.closedBy || "-"}</td>
   <td>${f.closeDate ? new Date(f.closeDate).toLocaleDateString("id-ID"): "-"}</td>
+  <td>${f.closePhoto ? `<a href="${f.closePhoto}" target="_blank">📷 Lihat</a>`: "-"}</td>
   <td>${f.status==="OPEN" ? `
   <button class="btn btn-success btn-sm" onclick="Finding.close('${f.id}')">Tutup</button>`: "-"}</td>
   </tr>`;}).join("");
@@ -1461,12 +1500,12 @@ const Views = {
     <div><h3>Daftar Temuan</h3><p>Monitoring status temuan inspeksi</p></div></div>
     <div style="margin-bottom:15px;display:flex;gap:10px;">
     <button class="btn btn-sm"onclick="Finding.filter('ALL')">Semua</button>
-    <button class="btn btn-sm btn-success"onclick="Finding.filter('OPEN')">OPEN</button>
-    <button class="btn btn- sm btn-dark"onclick="Finding.filter('CLOSED')">CLOSED</button></div>
+    <button class="btn btn-sm" style="background:#f79009;color:white;"onclick="Finding.filter('OPEN')">OPEN</button>
+    <button class="btn btn- sm btn-success"onclick="Finding.filter('CLOSED')">CLOSED</button></div>
     <table>
     <thead>
     <tr>
-    <th>Barcode</th><th>Item</th><th>Temuan</th><th>Status</th><th>Tanggal</th><th>Closed By</th><th>Close Date</th><th>Aksi</th></tr>
+    <th>Barcode</th><th>Item</th><th>Temuan</th><th>Status</th><th>Tanggal</th><th>Closed By</th><th>Close Date</th><th>Foto Close</th><th>Aksi</th></tr>
     </thead>
     <tbody>${rows}</tbody>
     </table>
@@ -2160,14 +2199,29 @@ const Barcode = {
 ===================================================================== */
 const Finding = {
 currentFilter : "ALL",
+closePhoto : null,
 filter(status){this.currentFilter = status; App.render();},
-async close(id){
-if(!confirm("Tutup temuan ini?")
-){return;}
-await Store.closeFinding(id,
-{closedBy:Auth.current.name});
-toast("Temuan ditutup","success");
-App.render();}
+close(id){
+  document.getElementById("close-finding-id").value = id;
+  document.getElementById("close-photo-input").value = "";
+  this.closePhoto = null;
+  Modal.open("modal-close-finding");
+  },
+async submitClose(){Loading.show("Menyimpan bukti perbaikan...");
+  try{
+  const id =document.getElementById("close-finding-id").value;
+  const file = document.getElementById("close-photo-input").files[0];
+  let closePhoto = "";
+  if(file){closePhoto =await resizeImage(file);
+  if(Store.mode === "gas"){closePhoto = await Store.uploadImage(closePhoto);
+}}
+  await Store.closeFinding(id,{closePhoto, closedBy: Auth.current.name});
+  Modal.close("modal-close-finding");
+  toast("Temuan ditutup","success");
+  App.render();
+  }finally{Loading.hide();
+  }
+},
 };
 const Report = {
   refreshTable(){
@@ -2431,5 +2485,11 @@ App.render = async function(){
 // Semua modul sudah dimuat — jalankan aplikasi.
 boot();
 </script>
+<div id="loading-overlay"class="hidden"><div class="loading-box">
+  <div class="loader"></div>
+    <div id="loading-text">Loading...
+    </div>
+  </div>
+</div>
 </body>
 </html>
