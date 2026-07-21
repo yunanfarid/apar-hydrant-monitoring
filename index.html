@@ -1420,11 +1420,15 @@ const Views = {
     </div>`;
   },
   findings(){
-  const rows = App.findings.sort((a,b)=>{
-  if(a.status==="OPEN" && b.status==="CLOSED")
-  return -1;
-  if(a.status==="CLOSED" && b.status==="OPEN")
-  return 1; return 0;}).map(f=>{
+  const openCount = App.findings.filter(x => x.status === "OPEN").length;
+  const closedCount = App.findings.filter(x => x.status === "CLOSED").length;
+  const totalCount = App.findings.length;
+  const rows = App.findings.filter(f=>{
+  if(Finding.currentFilter === "ALL"){return true;
+  }return (f.status === Finding.currentFilter);
+  }).sort((a,b)=>{
+  if(a.status==="OPEN" && b.status==="CLOSED"){return -1;}
+  if(a.status==="CLOSED" && b.status==="OPEN"){return 1;}return 0;}).map(f=>{
   const statusBadge = f.status==="OPEN" ? '<span class="badge orange">OPEN</span>' : '<span class="badge green">CLOSED</span>';
   return `
   <tr><td>${f.barcode}</td>
@@ -1432,19 +1436,37 @@ const Views = {
   <td>${f.findingType}</td>
   <td>${statusBadge}</td>
   <td>${f.openDate ? new Date(f.openDate).toLocaleDateString("id-ID"): "-"}</td>
+  <td>${f.closedBy || "-"}</td>
+  <td>${f.closeDate ? new Date(f.closeDate).toLocaleDateString("id-ID"): "-"}</td>
   <td>${f.status==="OPEN" ? `
   <button class="btn btn-success btn-sm" onclick="Finding.close('${f.id}')">Tutup</button>`: "-"}</td>
   </tr>`;}).join("");
   return `
+  <div class="stat-row">
+  <div class="stat-card orange">
+  <div class="num">${openCount}</div>
+  <div class="lbl">OPEN</div>
+  </div>
+  <div class="stat-card green">
+  <div class="num">${closedCount}</div>
+  <div class="lbl">CLOSED</div>
+  </div>
+  <div class="stat-card">
+  <div class="num">${totalCount}</div>
+  <div class="lbl">TOTAL</div>
+  </div>
+  </div>
   <div class="card">
     <div class="card-head">
-      <div><h3>Daftar Temuan</h3><p>Monitoring status temuan inspeksi</p>
-    </div>
-    </div>
+    <div><h3>Daftar Temuan</h3><p>Monitoring status temuan inspeksi</p></div></div>
+    <div style="margin-bottom:15px;display:flex;gap:10px;">
+    <button class="btn btn-sm"onclick="Finding.filter('ALL')">Semua</button>
+    <button class="btn btn-sm btn-success"onclick="Finding.filter('OPEN')">OPEN</button>
+    <button class="btn btn- sm btn-dark"onclick="Finding.filter('CLOSED')">CLOSED</button></div>
     <table>
     <thead>
     <tr>
-    <th>Barcode</th><th>Item</th><th>Temuan</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr>
+    <th>Barcode</th><th>Item</th><th>Temuan</th><th>Status</th><th>Tanggal</th><th>Closed By</th><th>Close Date</th><th>Aksi</th></tr>
     </thead>
     <tbody>${rows}</tbody>
     </table>
@@ -2137,6 +2159,8 @@ const Barcode = {
    REPORT — riwayat & laporan
 ===================================================================== */
 const Finding = {
+currentFilter : "ALL",
+filter(status){this.currentFilter = status; App.render();},
 async close(id){
 if(!confirm("Tutup temuan ini?")
 ){return;}
