@@ -77,29 +77,46 @@ a{color:inherit;}
 #login-screen{
   min-height:100vh;
   display:flex;
-  align-items:center;
   justify-content:center;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(245,165,36,0.12), transparent 40%),
-    radial-gradient(circle at 85% 80%, rgba(18,183,106,0.10), transparent 40%),
-    var(--navy-950);
+  align-items:center;
   padding:20px;
+
+  background:
+    linear-gradient(
+      rgba(0,0,0,.18),
+      rgba(0,0,0,.18)
+    ),
+    url("background-siapa.png");
+
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+.version-text{
+margin-top:20px;
+color:white;
+opacity:.8;
+font-size:15px;
+}
+.login-wrapper{
+width:100%;
+max-width:700px;
+text-align:center;
 }
 .login-card{
-  background:var(--surface);
-  border-radius:20px;
-  width:100%;
-  max-width:400px;
-  padding:36px 32px 30px;
-  box-shadow:0 30px 60px -20px rgba(0,0,0,0.5);
+  background:white;
+  border-radius:28px;
+  max-width:560px;
+  padding:40px;
+  margin:auto;
 }
-.login-brand{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:24px;}
-.login-logo{width:180px;max-width:80%;margin-bottom:10px;
+.login-brand{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:25px;color:white;}
+.login-logo{width:220px;margin-bottom:10px;
 }
 .company-name{margin-top:12px;font-size:14px;color:#667085;line-height:1.5;
 }
-.login-brand h1{font-size:19px;margin:0;letter-spacing:-0.02em;}
-.login-brand p{margin:2px 0 0;font-size:12.5px;color:var(--text-500);}
+.login-brand h1{font-size:50px;font-weight:800;margin:0;letter-spacing:2px;color:white;}
+.login-brand p{margin-top:5px;font-size:22px;color:white;}
 .field{margin-bottom:16px;}
 .field label{display:block;font-size:12.5px;font-weight:600;color:var(--text-700);margin-bottom:6px;}
 .field input,.field select,.field textarea{
@@ -135,6 +152,10 @@ a{color:inherit;}
   padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;
 }
 .login-demo{margin-top:18px;padding-top:16px;border-top:1px dashed var(--border);font-size:12px;color:var(--text-500);line-height:1.6;}
+#login-mode-label{
+    color:#f59e0b;
+    font-weight:700;
+}
 
 /* ---------- App shell ---------- */
 #app{display:none;min-height:100vh;}
@@ -409,35 +430,129 @@ h1,h2{page-break-after:avoid;}
 }
 .table-loader{width:40px;height:40px;border:4px solid #e5e7eb;border-top:4px solid #f5a524;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:10px;
 }
+.gold-line{width:90px;height:5px;background:#f5a524;margin:18px auto;border-radius:20px;
+}
+.input-icon-wrap{
+    position:relative;
+}
+
+.input-icon{
+    position:absolute;
+    left:16px;
+    top:50%;
+    transform:translateY(-50%);
+
+    width:22px;
+    height:22px;
+
+    color:#6b7280;
+    pointer-events:none;
+}
+
+.input-icon-wrap input{
+    padding-left:52px !important;
+    padding-right:50px !important;
+}
+.password-toggle{
+    position:absolute;
+    right:16px;
+    top:50%;
+    transform:translateY(-50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+    color:#667085;
+    cursor:pointer;
+    font-size:20px;
+    user-select:none;
+    transition:.2s;
+}
+.password-toggle:hover{
+color:#f5a524;
+}
+.status-online-dot{
+    width:10px;
+    height:10px;
+
+    background:#22c55e;
+
+    border-radius:50%;
+
+    display:inline-block;
+
+    margin-right:8px;
+
+    box-shadow:
+        0 0 8px rgba(34,197,94,.6);
+}
 </style>
 </head>
 <body>
 
 <!-- ================= LOGIN SCREEN ================= -->
 <div id="login-screen">
-  <div class="login-card">
+  <div class="login-wrapper">
     <div class="login-brand">
     <img src="logo-siapa.png" class="login-logo">
     <h1>SIAPA</h1>
     <p>Sistem Inspeksi Alat Pemadam Api</p>
-    <div class="company-name">PT Toyota Astra Motor<br>NVDC Cibitung</div>
     </div>
+    <div class="login-card">
     <div id="login-error" class="login-error hidden"></div>
     <form id="login-form">
       <div class="field">
-        <label>Username</label>
-        <input type="text" id="login-username" autocomplete="username" required placeholder="mis. admin">
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="login-password" autocomplete="current-password" required placeholder="Masukkan Password">
-      </div>
+  <label>Username</label>
+  <div class="input-icon-wrap">
+  <svg class="input-icon"viewBox="0 0 24 24"fill="none"stroke="currentColor"stroke-width="2">
+  <path d="M20 21a8 8 0 0 0-16 0"></path>
+  <circle cx="12" cy="8" r="4"></circle></svg>
+  <input type="text"id="login-username"autocomplete="username"required placeholder="Masukkan Username"></div>
+</div>
+<div class="field">
+  <label>Password</label>
+  <div class="input-icon-wrap">
+    <!-- ICON GEMBOK -->
+    <svg class="input-icon"viewBox="0 0 24 24"fill="none"stroke="currentColor"stroke-width="2">
+      <rect x="5"y="11"width="14"height="10"rx="2"></rect>
+      <path d="M8 11V8a4 4 0 0 1 8 0v3"></path>
+    </svg>
+    <input type="password"id="login-password"auto complete="current-password"required placeholder="Masukkan Password">
+    <span class="password-toggle"
+      onclick="togglePassword()">
+
+    <svg id="password-eye"
+         width="24"
+         height="24"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+
+        <path d="M1 12C3 7 7 4 12 4C17 4 21 7 23 12C21 17 17 20 12 20C7 20 3 17 1 12Z"></path>
+
+        <circle cx="12"
+                cy="12"
+                r="3"></circle>
+
+    </svg>
+
+</span>
+  </div>
+</div>
       <button type="submit" class="btn btn-primary btn-block">Masuk</button>
     </form>
     <div class="login-demo">
-      Mode data saat ini: <b id="login-mode-label">Lokal (browser ini saja)</b>
+      Mode data saat ini:<span class="status-online-dot"></span><b id="login-mode-label">Lokal (browser ini saja)</b>
     </div>
   </div>
+  <div class="version-text">
+  PT TOYOTA ASTRA MOTOR
+  </div>
+</div>
 </div>
 
 <!-- ================= APP SHELL ================= -->
@@ -1217,7 +1332,7 @@ const App = {
     const map = { dashboard:["Dashboard","Ringkasan status pemeriksaan bulan berjalan"],
       map:["Peta Lokasi","Pilih lokasi untuk melihat posisi & status APAR/Hydrant"],
       report:["Riwayat & Laporan","Rekap seluruh hasil pemeriksaan"],
-      findings:["Daftar Temuan", "Monitoring temuan OPEN dan CLOSED"],
+      findings:["Daftar Temuan", "Monitoring temuan Open dan Closed"],
       "admin-maps":["Kelola Peta","Upload & atur denah lokasi"],
       "admin-points":["Kelola Titik APAR/Hydrant","Tempatkan & atur data setiap unit"],
       "admin-barcode":["Cetak Label Barcode","Cetak label untuk ditempel di unit fisik"],
@@ -1485,7 +1600,7 @@ const Views = {
   }).sort((a,b)=>{
   if(a.status==="OPEN" && b.status==="CLOSED"){return -1;}
   if(a.status==="CLOSED" && b.status==="OPEN"){return 1;}return 0;}).map(f=>{
-  const statusBadge = f.status==="OPEN" ? '<span class="badge orange">OPEN</span>' : '<span class="badge green">CLOSED</span>';
+  const statusBadge = f.status==="OPEN" ? '<span class="badge orange">Open</span>' : '<span class="badge green">Closed</span>';
   return `
   <tr><td>${f.barcode}</td>
   <td>${f.itemName}</td>
@@ -1502,15 +1617,15 @@ const Views = {
   <div class="stat-row">
   <div class="stat-card orange">
   <div class="num">${openCount}</div>
-  <div class="lbl">OPEN</div>
+  <div class="lbl">Open</div>
   </div>
   <div class="stat-card green">
   <div class="num">${closedCount}</div>
-  <div class="lbl">CLOSED</div>
+  <div class="lbl">Closed</div>
   </div>
   <div class="stat-card">
   <div class="num">${totalCount}</div>
-  <div class="lbl">TOTAL</div>
+  <div class="lbl">Total</div>
   </div>
   </div>
   <div class="card">
@@ -1518,8 +1633,8 @@ const Views = {
     <div><h3>Daftar Temuan</h3><p>Monitoring status temuan inspeksi</p></div></div>
     <div style="margin-bottom:15px;display:flex;gap:10px;">
     <button class="btn btn-sm"onclick="Finding.filter('ALL')">Semua</button>
-    <button class="btn btn-sm" style="background:#f79009;color:white;"onclick="Finding.filter('OPEN')">OPEN</button>
-    <button class="btn btn- sm btn-success"onclick="Finding.filter('CLOSED')">CLOSED</button></div>
+    <button class="btn btn-sm" style="background:#f79009;color:white;"onclick="Finding.filter('OPEN')">Open</button>
+    <button class="btn btn- sm btn-success"onclick="Finding.filter('Closed')">Closed</button></div>
     <div id="findings-table-container">
     <table>
     <thead>
@@ -2526,5 +2641,36 @@ boot();
     </div>
   </div>
 </div>
+<script>
+function togglePassword(){
+
+    const passwordInput =
+        document.getElementById("login-password");
+
+    const eye =
+        document.getElementById("password-eye");
+
+    if(passwordInput.type === "password"){
+
+        passwordInput.type = "text";
+
+        eye.innerHTML = `
+            <path d="M17.94 17.94C16.2 19.24 14.18 20 12 20C7 20 3 17 1 12C1.73 10.27 2.73 8.76 3.94 7.48"></path>
+            <path d="M10.58 10.58A2 2 0 0 0 13.42 13.42"></path>
+            <path d="M9.88 5.09C10.57 4.94 11.28 4.86 12 4.86C17 4.86 21 8.86 23 12C22.32 13.48 21.39 14.8 20.27 15.92"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+        `;
+
+    }else{
+
+        passwordInput.type = "password";
+
+        eye.innerHTML = `
+            <path d="M1 12C3 7 7 4 12 4C17 4 21 7 23 12C21 17 17 20 12 20C7 20 3 17 1 12Z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        `;
+    }
+}
+</script>
 </body>
 </html>
