@@ -799,8 +799,7 @@ color:#f5a524;
           <label>Role</label>
           <select id="user-edit-role">
             <option value="admin">Admin</option>
-            <option value="vendor1">Vendor 1</option>
-            <option value="vendor2">Vendor 2</option>
+            <option value="checker">Checker</option>
           </select>
         </div>
       </div>
@@ -902,8 +901,7 @@ function defaultDB(){
     users: [
       // password default akan di-hash saat first run (lihat Store.init)
       { id:"u_admin", username:"admin", name:"Administrator", role:"admin", passHash:null, _plain:"admin123" },
-      { id:"u_v1", username:"vendor1", name:"Vendor 1", role:"vendor1", passHash:null, _plain:"vendor123" },
-      { id:"u_v2", username:"vendor2", name:"Vendor 2", role:"vendor2", passHash:null, _plain:"vendor123" },
+      { id:"u_checker1", username:"checker1", name:"Checker 1", role:"checker", passHash:null, _plain:"vendor123" },
     ],
     maps: [
       { id:"map_ob1", name:"OFFICE BUILDING LANTAI 1", image:"", order:1 },
@@ -1234,10 +1232,10 @@ document.getElementById("login-form").addEventListener("submit", async (e)=>{
    APP CORE — routing, period picker, nav
 ===================================================================== */
 const NAV_ITEMS = [
-  { id:"dashboard", label:"Dashboard", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>' },
-  { id:"map", label:"Peta Lokasi", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>' },
-  { id:"report", label:"Riwayat & Laporan", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>' },
-  { id:"findings", label:"Daftar Temuan", roles:["admin","vendor1","vendor2"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1"/></svg>'},
+  { id:"dashboard", label:"Dashboard", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>' },
+  { id:"map", label:"Peta Lokasi", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>' },
+  { id:"report", label:"Riwayat & Laporan", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>' },
+  { id:"findings", label:"Daftar Temuan", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1"/></svg>'},
   { id:"admin-maps", label:"Kelola Peta", roles:["admin"], section:"Pengaturan Admin", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/></svg>' },
   { id:"admin-points", label:"Kelola Titik APAR/Hydrant", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' },
   { id:"admin-barcode", label:"Cetak Label Barcode", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="10" y1="5" x2="10" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/><line x1="18" y1="5" x2="18" y2="19"/></svg>' },
