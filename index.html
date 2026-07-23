@@ -349,8 +349,10 @@ tr:hover td{background:#fafbfc;}
 
 .map-place-hint{background:#fff8ec;border:1px solid #f5d896;color:#8a5a06;padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
 
-.barcode-print-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
-.barcode-card{border:1.5px dashed var(--border);border-radius:10px;padding:14px;text-align:center;}
+.barcode-print-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.barcode-card{border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;min-height:210px;
+break-inside:avoid;
+page-break-inside:avoid;}
 .barcode-card h4{margin:0 0 2px;font-size:13px;}
 .barcode-card .loc{font-size:11px;color:var(--text-500);margin-bottom:8px;}
 .qr-code{
@@ -360,9 +362,34 @@ tr:hover td{background:#fafbfc;}
 }
 
 @media print{
-  .sidebar,.topbar,.scan-fab,.no-print{display:none !important;}
-  .content{padding:0;}
-  body{background:#fff;}
+
+  .sidebar,
+  .topbar,
+  .scan-fab,
+  .no-print{
+      display:none !important;
+  }
+
+  body{
+      background:#fff;
+      margin:0;
+  }
+
+  .content{
+      padding:0;
+  }
+
+  .barcode-print-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+  }
+
+  .barcode-card{
+      page-break-inside:avoid;
+      break-inside:avoid;
+  }
+
 }
 
 @media (max-width:900px){
@@ -1257,7 +1284,7 @@ const NAV_ITEMS = [
   { id:"findings", label:"Daftar Temuan", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1"/></svg>'},
   { id:"admin-maps", label:"Kelola Peta", roles:["admin"], section:"Pengaturan Admin", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/></svg>' },
   { id:"admin-points", label:"Kelola Titik APAR/Hydrant", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' },
-  { id:"admin-barcode", label:"Cetak Label Barcode", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="10" y1="5" x2="10" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/><line x1="18" y1="5" x2="18" y2="19"/></svg>' },
+  { id:"admin-barcode", label:"Cetak Label QR Code", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="10" y1="5" x2="10" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/><line x1="18" y1="5" x2="18" y2="19"/></svg>' },
   { id:"admin-users", label:"Kelola Pengguna", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
   { id:"admin-connection", label:"Koneksi Data", roles:["admin"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9a9 9 0 0 1 14.7-3M20 15a9 9 0 0 1-14.7 3"/><polyline points="16 3 20 3 20 7"/><polyline points="8 21 4 21 4 17"/></svg>' },
 ];
