@@ -17,12 +17,12 @@ body{
 }
 
 .card{
-    max-width:600px;
+    max-width:700px;
     margin:auto;
-    background:white;
-    border-radius:16px;
-    padding:25px;
-    box-shadow:0 10px 30px rgba(0,0,0,.1);
+    background:#0f3b66;
+    border-radius:20px;
+    padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
 }
 
 .logo{
@@ -36,12 +36,13 @@ body{
     font-size:20px;
     font-weight:bold;
     text-align:center;
+    color:white;
 }
 
 .small{
-    color:#6b7280;
+    color:#cbd5e1;
     text-align:center;
-    margin-top:10px;
+    margin-top:20px;
 }
 
 </style>
@@ -190,6 +191,16 @@ function renderAsset(data){
     ? "#f59e0b"
     : "#ef4444";
 
+let statusBg = "#fee2e2";
+
+if(data.status === "SUDAH DIPERIKSA"){
+  statusBg = "#dcfce7";
+}
+
+if(data.status === "ADA TEMUAN"){
+  statusBg = "#fff3cd";
+}
+
   let statusIcon = "❌";
 
 if(data.status === "SUDAH DIPERIKSA"){
@@ -227,6 +238,7 @@ if(
       margin-top:10px;
       font-size:22px;
       font-weight:bold;
+      color:white;
     ">
       ${data.type} #${data.number}
     </div>
@@ -236,7 +248,7 @@ if(
     display:inline-block;
     padding:10px 18px;
     border-radius:999px;
-    background:${statusColor}15;
+    background:${statusBg};
     color:${statusColor};
     font-weight:700;
     font-size:16px;
@@ -249,6 +261,7 @@ if(
       text-align:left;
       line-height:2;
       font-size:16px;
+      color:white;
     ">
 
       <b>Jenis :</b>
