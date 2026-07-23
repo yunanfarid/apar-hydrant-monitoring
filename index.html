@@ -1315,13 +1315,14 @@ const App = {
   renderNav(){
     const role = Auth.current.role;
     const items = NAV_ITEMS.filter(n=>n.roles.includes(role));
+    const openFindingCount = this.findings.filter(f => f.status === "OPEN").length;
     let html = "", lastSection = null;
     for(const item of items){
       if(item.section && item.section !== lastSection){
         html += `<div class="nav-section-label">${item.section}</div>`;
         lastSection = item.section;
       }
-      html += `<div class="nav-item ${this.view===item.id?"active":""}" onclick="App.go('${item.id}')">${item.icon}<span>${item.label}</span></div>`;
+      html += `<div class="nav-item ${this.view===item.id?"active":""}" onclick="App.go('${item.id}')">${item.icon}<span>${item.id === "findings"? `${item.label} (${openFindingCount})`: item.label}</span></div>`;
     }
     document.getElementById("nav-list").innerHTML = html;
     // mobile nav: dashboard, map, report, +settings(admin) only, max 4
