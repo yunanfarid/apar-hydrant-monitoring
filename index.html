@@ -2266,7 +2266,7 @@ const Scanner = {
   const gps = await this.getCurrentLocation();
   const point = App.points.find(p => p.id === this.pendingPointId);
   const distance = calculateDistance(Number(gps.latitude), Number(gps.longitude), Number(point.latitude), Number(point.longitude));
-  const radius = Number(point.radiusMeter || 15);
+  const radius = Number(point.radiusMeter || 20);
   if(distance > radius){
   toast(`❌ Anda berada ${Math.round(distance)} meter dari asset. Maksimum ${radius} meter. Silakan scan ulang barcode.`,"error");
   this.requiredPhoto = null;
