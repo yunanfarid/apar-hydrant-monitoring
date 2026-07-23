@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 /* =====================================================================
    SIAPA — Sistem Inspeksi Alat Pemadam Api
@@ -352,7 +353,11 @@ tr:hover td{background:#fafbfc;}
 .barcode-card{border:1.5px dashed var(--border);border-radius:10px;padding:14px;text-align:center;}
 .barcode-card h4{margin:0 0 2px;font-size:13px;}
 .barcode-card .loc{font-size:11px;color:var(--text-500);margin-bottom:8px;}
-.barcode-card svg{width:100%;}
+.qr-code{
+    display:flex;
+    justify-content:center;
+    margin-top:10px;
+}
 
 @media print{
   .sidebar,.topbar,.scan-fab,.no-print{display:none !important;}
@@ -1704,7 +1709,10 @@ const Views = {
       <div class="barcode-card">
         <h4>${TYPE_LABEL[p.type]} #${escapeHtml(p.number)}</h4>
         <div class="loc">${escapeHtml(mapName(p.mapId))}</div>
-        <svg class="barcode-svg" data-code="${escapeHtml(p.barcode)}"></svg>
+<div
+  class="qr-code"
+  data-code="${APP_CONFIG.systemUrl}asset.html?id=${encodeURIComponent(p.barcode)}">
+</div>
       </div>`).join("");
     return `
     <div class="card no-print">
@@ -2257,16 +2265,68 @@ const Scanner = {
   onScan(decodedText){
     this.handleCode(decodedText);
   },
-  handleCode(code){
-    const point = App.points.find(p=>p.barcode.toLowerCase()===code.toLowerCase());
-    if(!point){ toast(`Kode "${code}" tidak terdaftar`, "error"); return; }
+handleCode(code){
+
+    let scannedCode = code;
+
+    // Jika QR berisi URL asset.html?id=...
+    if(
+        scannedCode.includes("asset.html?id=")
+    ){
+
+        try{
+
+            const url =
+                new URL(scannedCode);
+
+            scannedCode =
+                url.searchParams.get("id");
+
+        }catch(err){
+
+            console.error(err);
+
+        }
+
+    }
+
+    const point =
+        App.points.find(
+            p =>
+                p.barcode.toLowerCase() ===
+                scannedCode.toLowerCase()
+        );
+
+    if(!point){
+
+        toast(
+            `Kode "${scannedCode}" tidak terdaftar`,
+            "error"
+        );
+
+        return;
+
+    }
+
     this.close();
+
     this.pendingPointId = point.id;
+
     this.requiredPhoto = null;
-    document.getElementById("required-photo-input").value = "";
-    document.getElementById("required-photo-preview").style.display = "none";
-    Modal.open("modal-required-photo");
-  },
+
+    document.getElementById(
+        "required-photo-input"
+    ).value = "";
+
+    document.getElementById(
+        "required-photo-preview"
+    ).style.display = "none";
+
+    Modal.open(
+        "modal-required-photo"
+    );
+
+},
     async getCurrentLocation(){
     return new Promise((resolve,reject)=>{
     navigator.geolocation.getCurrentPosition(
@@ -2334,12 +2394,30 @@ const Scanner = {
    BARCODE PRINT — render Code128 pakai JsBarcode
 ===================================================================== */
 const Barcode = {
+
   afterRender(){
-    if(typeof JsBarcode === "undefined") return;
-    document.querySelectorAll(".barcode-svg").forEach(svg=>{
-      try{ JsBarcode(svg, svg.dataset.code, { format:"CODE128", width:1.6, height:40, fontSize:12, margin:4 }); }catch(e){}
-    });
+
+    document
+      .querySelectorAll(".qr-code")
+      .forEach(el=>{
+
+        el.innerHTML = "";
+
+        new QRCode(
+          el,
+          {
+            text: el.dataset.code,
+            width: 140,
+            height: 140,
+            correctLevel:
+              QRCode.CorrectLevel.H
+          }
+        );
+
+      });
+
   },
+
 };
 
 /* =====================================================================
