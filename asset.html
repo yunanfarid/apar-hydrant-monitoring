@@ -72,6 +72,9 @@ Halaman status asset SIAPA
 
 <script>
 
+const GAS_URL =
+"https://script.google.com/macros/s/AKfycbxcV_xS4EHDaPf5y9JgjHRB6yn_brFtSOnqrHSHAFB1OTUwWIs2agar9NsvK7S4mX_z/exec";
+
 const params =
 new URLSearchParams(
     window.location.search
@@ -80,10 +83,149 @@ new URLSearchParams(
 const assetId =
 params.get("id");
 
-document.getElementById(
+loadAsset();
+
+async function loadAsset(){
+
+  if(!assetId){
+
+    document.getElementById(
+      "asset-code"
+    ).textContent =
+    "Asset Tidak Ditemukan";
+
+    return;
+
+  }
+
+  try{
+
+    const response =
+      await fetch(
+        GAS_URL,
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":
+            "text/plain;charset=utf-8"
+          },
+          body:JSON.stringify({
+            action:"getPublicAsset",
+            payload:{
+              barcode:assetId
+            }
+          })
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if(!result.ok){
+
+      throw new Error(
+        result.error
+      );
+
+    }
+
+    renderAsset(
+      result.data
+    );
+
+  }catch(error){
+
+    document.getElementById(
+      "asset-code"
+    ).innerHTML =
+    `
+      Gagal memuat data asset
+      <br><br>
+      ${error.message}
+    `;
+
+  }
+
+}
+function renderAsset(data){
+
+  let icon = "🧯";
+
+  if(data.type === "HYDRANT_INDOOR"){
+    icon = "🚰";
+  }
+
+  if(data.type === "HYDRANT_OUTDOOR"){
+    icon = "🚒";
+  }
+
+  const statusColor =
+    data.status === "SUDAH DIPERIKSA"
+    ? "#16a34a"
+    : data.status === "ADA TEMUAN"
+    ? "#f59e0b"
+    : "#ef4444";
+
+  document.getElementById(
     "asset-code"
-).textContent =
-assetId || "Asset Tidak Ditemukan";
+  ).innerHTML =
+  `
+    <div style="font-size:32px;">
+      ${icon}
+    </div>
+
+    <div style="
+      margin-top:10px;
+      font-size:22px;
+      font-weight:bold;
+    ">
+      ${data.type} #${data.number}
+    </div>
+
+    <div style="
+      margin-top:20px;
+      text-align:left;
+      line-height:2;
+      font-size:16px;
+    ">
+
+      <b>Jenis :</b>
+      ${data.jenis || "-"}
+
+      <br>
+
+      <b>Lokasi :</b>
+      ${data.lokasi || "-"}
+
+      <br>
+
+      <b>Status :</b>
+
+      <span style="
+        color:${statusColor};
+        font-weight:bold;
+      ">
+        ${data.status}
+      </span>
+
+      <br>
+
+      <b>Tanggal Pemeriksaan :</b>
+      ${data.inspectionDate}
+
+      <br>
+
+      <b>Checker :</b>
+      ${data.checker}
+
+      <br>
+
+      <b>Temuan :</b>
+      ${data.finding}
+
+    </div>
+  `;
+}
 
 </script>
 
