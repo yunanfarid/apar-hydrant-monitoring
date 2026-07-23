@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Status Asset - SIAPA</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f3f4f6;
+    margin:0;
+    padding:30px;
+}
+
+.card{
+    max-width:600px;
+    margin:auto;
+    background:white;
+    border-radius:16px;
+    padding:25px;
+    box-shadow:0 10px 30px rgba(0,0,0,.1);
+}
+
+.logo{
+    width:180px;
+    display:block;
+    margin:auto;
+    margin-bottom:20px;
+}
+
+.info{
+    font-size:20px;
+    font-weight:bold;
+    text-align:center;
+}
+
+.small{
+    color:#6b7280;
+    text-align:center;
+    margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<img src="logo-siapa.png"
+     class="logo">
+
+<div class="info"
+     id="asset-code">
+
+Loading...
+
+</div>
+
+<div class="small">
+
+Halaman status asset SIAPA
+
+</div>
+
+</div>
+
+<script>
+
+const params =
+new URLSearchParams(
+    window.location.search
+);
+
+const assetId =
+params.get("id");
+
+document.getElementById(
+    "asset-code"
+).textContent =
+assetId || "Asset Tidak Ditemukan";
+
+</script>
+
+</body>
+</html>
