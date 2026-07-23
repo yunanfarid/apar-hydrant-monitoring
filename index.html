@@ -859,6 +859,20 @@ color:#f5a524;
 </div>
 </div>
 </div>
+<div class="modal-overlay" id="modal-asset-info">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="asset-info-title">🧯 APAR</h3>
+      <button class="close-x"onclick="Modal.close('modal-asset-info')">✕</button>
+    </div>
+    <div class="modal-body" id="asset-info-body">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost"onclick="Modal.close('modal-asset-info')">Tutup</button>
+      <button class="btn btn-primary"onclick="AssetInfo.scan()">📷 Scan Barcode</button>
+    </div>
+  </div>
+</div>
 <script>
 /* =====================================================================
    SIAPA — APP CONFIG
@@ -1278,15 +1292,25 @@ const App = {
       this.period.month = startMonth;
     }
   },
-  onPeriodChange(){
+  async onPeriodChange(){
+    Loading.show("Memuat Data Bulan...");
+    try{
     this.period.month = parseInt(document.getElementById("picker-month").value);
-    this.render();
+    await this.render();
+    }finally{
+      Loading.hide();
+    }
   },
-  onYearChange(){
+  async onYearChange(){
+    Loading.show("Memuat Data Tahun...");
+    try{
     this.period.year = parseInt(document.getElementById("picker-year").value);
     this.refreshMonthOptions();
     this.period.month = parseInt(document.getElementById("picker-month").value);
-    this.render();
+    await this.render();
+    }finally{
+      Loading.hide();
+    }
   },
   renderNav(){
     const role = Auth.current.role;
@@ -1514,8 +1538,8 @@ const Views = {
       const s = statusOf(p.id, App.records, year, month);
       if(s==="red") redC++; else if(s==="green") greenC++; else orangeC++;
       const clickAction = Auth.isAdmin()
-          ? `Checklist.openFor('${p.id}')`
-          : `Checklist.vendorScanRequired()`;
+        ? `Checklist.openFor('${p.id}')`
+        : `AssetInfo.open('${p.id}')`;
       return `<div class="pin status-${s}
       ${p.type !== 'APAR'? 'pin-hydrant': ''}" style="left:${p.x}%;top:${p.y}%;" data-point-id="${p.id}" onclick="${clickAction}" title="${escapeHtml(TYPE_LABEL[p.type])} #${escapeHtml(p.number)}">
         <div class="pin-icon" style="background:${s==='red'?'var(--red-500)':s==='green'?'var(--green-500)':'var(--orange-500)'}">${iconFor(p.type)}</div>
@@ -2362,7 +2386,40 @@ async submitClose(){Loading.show("Menyimpan bukti perbaikan...");
   }
 },
 };
+const AssetInfo = {
+currentPointId : null,
+open(pointId){
+const point =App.points.find(p => p.id === pointId);
+if(!point) return;
+this.currentPointId = pointId;
+let icon = "🧯";
+if(point.type === "HYDRANT_INDOOR"){icon = "🚰";
+    }
+if(point.type === "HYDRANT_OUTDOOR"){icon = "🚒";
+    }
+document.getElementById("asset-info-title").textContent =`${icon} ${TYPE_LABEL[point.type]}`;
+document.getElementById("asset-info-body").innerHTML =`
+      <div style="line-height:1.9;">
+        <div><b>Nomor Asset :</b>${TYPE_LABEL[point.type]} #${point.number}</div>
+        <div><b>Jenis :</b>${point.jenis || "-"}</div>
+        <div><b>Lokasi :</b>${point.lokasi || "-"}</div>
+      </div>
+      <hr>
+      <div style="color:#c8353a;font-size:14px;font-weight:600;">⚠ Pemeriksaan hanya dapat dilakukan dengan scan barcode pada unit fisik.</div>`;
+Modal.open("modal-asset-info");
+  },
+scan(){Modal.close("modal-asset-info");
+Scanner.open();
+  }
+};
 const Report = {
+openMap(pointId){
+const point =App.points.find(p => p.id === pointId);
+if(!point || !point.latitude || !point.longitude){toast("Koordinat asset belum tersedia","error");
+return;
+}
+window.open(`https://www.google.com/maps/search/?api=1&query=${point.latitude},${point.longitude}`,"_blank");
+},
   refreshTable(){
     const mapF = document.getElementById("filter-map").value;
     const typeF = document.getElementById("filter-type").value;
@@ -2404,7 +2461,8 @@ const Report = {
         <td>${rec ? (rec.gpsStatus === "VALID" ? `✅ ${rec.distanceMeter} m`: `❌ ${rec.distanceMeter || "-"} m`): "-"}</td>
         <td>${rec?escapeHtml(rec.checkerName):"-"}</td>
         <td class="muted">${rec?new Date(rec.timestamp).toLocaleString("id-ID"):"-"}</td>
-        <td>${rec?`<button class="icon-btn" onclick="Report.viewDetail('${rec.id}')">👁</button>`:""}</td>
+        <td>${rec?`<button class="icon-btn" onclick="Report.viewDetail('${rec.id}')">👁</button>
+        <button class="icon-btn" onclick="Report.openMap('${p.id}')"title="Lihat Lokasi">🎯</button>`:""}</td>
       </tr>`;
     }
     html += `</tbody></table></div>`;
