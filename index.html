@@ -1381,7 +1381,7 @@ const App = {
       findings:["Daftar Temuan", "Monitoring temuan Open dan Closed"],
       "admin-maps":["Kelola Peta","Upload & atur denah lokasi"],
       "admin-points":["Kelola Titik APAR/Hydrant","Tempatkan & atur data setiap unit"],
-      "admin-barcode":["Cetak Label Barcode","Cetak label untuk ditempel di unit fisik"],
+      "admin-barcode":["Cetak Label QR Code","Cetak label untuk ditempel di unit fisik"],
       "admin-users":["Kelola Pengguna","Atur akun admin & vendor"],
       "admin-connection":["Koneksi Data","Hubungkan ke Google Sheets (opsional)"] };
     return map[viewId] || ["SIGAP",""];
@@ -1744,7 +1744,7 @@ const Views = {
     return `
     <div class="card no-print">
       <div class="card-head">
-        <div><h3>Cetak Label Barcode</h3><p>Cetak lalu tempel/laminating label ini pada tiap APAR & Hydrant fisik untuk discan petugas.</p></div>
+        <div><h3>Cetak Label QR Code</h3><p>Cetak lalu tempel/laminating label ini pada tiap APAR & Hydrant fisik untuk discan petugas.</p></div>
         <button class="btn btn-primary btn-sm" onclick="window.print()">🖨 Cetak Semua Label</button>
       </div>
     </div>
