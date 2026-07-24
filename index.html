@@ -1297,6 +1297,9 @@ const App = {
 
   async loadAll(){
     [this.maps, this.points, this.records, this.findings] = await Promise.all([Store.getMaps(), Store.getPoints(), Store.getRecords(), Store.getFindings()]);
+    console.log(
+  this.records
+);
     if(Auth.isAdmin()) this.users = await Store.getUsers();
   },
 
