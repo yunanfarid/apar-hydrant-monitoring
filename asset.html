@@ -211,6 +211,14 @@ if(data.status === "ADA TEMUAN"){
   statusIcon = "⚠";
 }
 let findingHtml = "Tidak Ada";
+const currentPeriod =
+  new Date().toLocaleDateString(
+    "id-ID",
+    {
+      month:"long",
+      year:"numeric"
+    }
+  );
 
 if(
   data.findingDetails &&
@@ -254,6 +262,14 @@ if(
     font-size:16px;
 ">
     ${statusIcon} ${data.status}
+</div>
+<div style="
+  margin-top:10px;
+  color:#cbd5e1;
+  font-size:14px;
+  font-weight:600;
+">
+  Periode : ${currentPeriod}
 </div>
 
     <div style="
