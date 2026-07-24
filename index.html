@@ -216,6 +216,8 @@ text-align:center;
 .map-card .thumb .badge-count{position:absolute;top:8px;right:8px;background:rgba(15,26,36,0.75);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700;}
 .map-card .body{padding:14px 16px 16px;}
 .map-card .body h3{margin:0 0 8px;font-size:15px;}
+.map-card .body .small-desc{font-size:12.5px;color:var(--text-500);
+}
 .progress-bar{height:7px;border-radius:20px;background:#eef0f2;overflow:hidden;}
 .progress-bar > div{height:100%;background:linear-gradient(90deg,var(--green-500),var(--green-600));border-radius:20px;transition:width .3s;}
 .map-card .prog-lbl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-500);margin-top:6px;font-weight:600;}
@@ -508,6 +510,12 @@ color:#f5a524;
   height:42px;
   object-fit:contain;
   flex-shrink:0;
+}
+.info-section-title{
+    margin-top:0;
+    margin-bottom:14px;
+    font-size:18px;
+    font-weight:700;
 }
 </style>
 </head>
@@ -1562,44 +1570,44 @@ const Views = {
       </div>`;
     }).join("");
     return `
-<h3>Informasi Peta</h3>
+<h3 class="info-section-title">Informasi Peta</h3>
 <div class="map-grid">${cards}</div>
 <hr>
 <h3>Informasi Bagian APAR & Hydrant</h3>
 <div class="map-grid">
 <div class="map-card"
-onclick="window.open('assets/apar-parts.jpg','_blank')">
+onclick="window.open('apar-parts.jpg','_blank')">
 <div class="thumb"
-style="background-image:url('assets/apar-parts.jpg')">
+style="background-image:url('apar-parts.jpg')">
 </div>
 <div class="body">
 <h3>Bagian APAR</h3>
-<div class="muted">
+<div class="small-desc">
 Referensi item pemeriksaan APAR
 </div>
 </div>
 </div>
 <div class="map-card"
-onclick="window.open('assets/hydrant-indoor-parts.jpg','_blank')">
+onclick="window.open('hydrant-indoor-parts.jpg','_blank')">
 <div class="thumb"
-style="background-image:url('assets/hydrant-indoor-parts.jpg')">
+style="background-image:url('hydrant-indoor-parts.jpg')">
 </div>
 <div class="body">
 <h3>Bagian Hydrant Indoor</h3>
-<div class="muted">
-Referensi item pemeriksaan
+<div class="small-desc">
+Referensi item pemeriksaan Hydrant Indoor
 </div>
 </div>
 </div>
 <div class="map-card"
-onclick="window.open('assets/hydrant-outdoor-parts.jpg','_blank')">
+onclick="window.open('hydrant-outdoor-parts.jpg','_blank')">
 <div class="thumb"
-style="background-image:url('assets/hydrant-outdoor-parts.jpg')">
+style="background-image:url('hydrant-outdoor-parts.jpg')">
 </div>
 <div class="body">
 <h3>Bagian Hydrant Outdoor</h3>
-<div class="muted">
-Referensi Item Pemeriksaan
+<div class="small-desc">
+Referensi item pemeriksaan Hydrant Outdoor
 </div>
 </div>
 </div>
@@ -1608,21 +1616,21 @@ Referensi Item Pemeriksaan
 <h3>SOP Penggunaan APAR & Hydrant</h3>
 <div class="map-grid">
 <div class="map-card"
-onclick="window.open('assets/sop-apar.jpg','_blank')">
-<div class="thumb"style="background-image:url('assets/sop-apar.jpg')"></div>
+onclick="window.open('sop-apar.jpg','_blank')">
+<div class="thumb"style="background-image:url('sop-apar.jpg')"></div>
 <div class="body">
 <h3>SOP APAR</h3>
-<div class="muted">Petunjuk Penggunaan APAR</div>
+<div class="small-desc">Petunjuk penggunaan APAR</div>
 </div>
 </div>
 <div class="map-card"
-onclick="window.open('assets/sop-hydrant.jpg','_blank')">
+onclick="window.open('sop-hydrant.jpg','_blank')">
 <div class="thumb"
-style="background-image:url('assets/sop-hydrant.jpg')">
+style="background-image:url('sop-hydrant.jpg')">
 </div>
 <div class="body">
 <h3>SOP Hydrant</h3>
-<div class="muted">Petunjuk Penggunaan Hydrant</div>
+<div class="small-desc">Petunjuk penggunaan Hydrant</div>
 </div>
 </div>
 </div>`;
