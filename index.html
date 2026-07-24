@@ -1279,7 +1279,7 @@ document.getElementById("login-form").addEventListener("submit", async (e)=>{
 ===================================================================== */
 const NAV_ITEMS = [
   { id:"dashboard", label:"Dashboard", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>' },
-  { id:"map", label:"Peta Lokasi", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>' },
+  { id:"map", label:"Peta & Informasi", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>' },
   { id:"report", label:"Riwayat & Laporan", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>' },
   { id:"findings", label:"Daftar Temuan", roles:["admin","checker"], icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1"/></svg>'},
   { id:"admin-maps", label:"Kelola Peta", roles:["admin"], section:"Pengaturan Admin", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/></svg>' },
@@ -1379,7 +1379,7 @@ const App = {
 
   titleFor(viewId){
     const map = { dashboard:["Dashboard","Ringkasan status pemeriksaan bulan berjalan"],
-      map:["Peta Lokasi","Pilih lokasi untuk melihat posisi & status APAR/Hydrant"],
+      map:["Peta & Informasi","Peta lokasi, referensi bagian dan SOP penggunaan APAR/Hydrant"],
       report:["Riwayat & Laporan","Rekap seluruh hasil pemeriksaan"],
       findings:["Daftar Temuan", "Monitoring temuan Open dan Closed"],
       "admin-maps":["Kelola Peta","Upload & atur denah lokasi"],
@@ -1561,7 +1561,71 @@ const Views = {
         <div class="body"><h3>${escapeHtml(m.name)}</h3><div class="muted" style="font-size:12.5px;">Klik untuk lihat peta & status</div></div>
       </div>`;
     }).join("");
-    return `<div class="map-grid">${cards}</div>`;
+    return `
+<h3>Informasi Peta</h3>
+<div class="map-grid">${cards}</div>
+<hr>
+<h3>Informasi Bagian APAR & Hydrant</h3>
+<div class="map-grid">
+<div class="map-card"
+onclick="window.open('assets/apar-parts.jpg','_blank')">
+<div class="thumb"
+style="background-image:url('assets/apar-parts.jpg')">
+</div>
+<div class="body">
+<h3>Bagian APAR</h3>
+<div class="muted">
+Referensi item pemeriksaan APAR
+</div>
+</div>
+</div>
+<div class="map-card"
+onclick="window.open('assets/hydrant-indoor-parts.jpg','_blank')">
+<div class="thumb"
+style="background-image:url('assets/hydrant-indoor-parts.jpg')">
+</div>
+<div class="body">
+<h3>Bagian Hydrant Indoor</h3>
+<div class="muted">
+Referensi item pemeriksaan
+</div>
+</div>
+</div>
+<div class="map-card"
+onclick="window.open('assets/hydrant-outdoor-parts.jpg','_blank')">
+<div class="thumb"
+style="background-image:url('assets/hydrant-outdoor-parts.jpg')">
+</div>
+<div class="body">
+<h3>Bagian Hydrant Outdoor</h3>
+<div class="muted">
+Referensi Item Pemeriksaan
+</div>
+</div>
+</div>
+</div>
+<hr>
+<h3>SOP Penggunaan APAR & Hydrant</h3>
+<div class="map-grid">
+<div class="map-card"
+onclick="window.open('assets/sop-apar.jpg','_blank')">
+<div class="thumb"style="background-image:url('assets/sop-apar.jpg')"></div>
+<div class="body">
+<h3>SOP APAR</h3>
+<div class="muted">Petunjuk Penggunaan APAR</div>
+</div>
+</div>
+<div class="map-card"
+onclick="window.open('assets/sop-hydrant.jpg','_blank')">
+<div class="thumb"
+style="background-image:url('assets/sop-hydrant.jpg')">
+</div>
+<div class="body">
+<h3>SOP Hydrant</h3>
+<div class="muted">Petunjuk Penggunaan Hydrant</div>
+</div>
+</div>
+</div>`;
   },
 
   mapDetail(mapId){
