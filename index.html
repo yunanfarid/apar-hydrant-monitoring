@@ -913,6 +913,59 @@ color:#f5a524;
     </div>
   </div>
 </div>
+<div class="modal-overlay" id="modal-asset-replacement">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Asset Replacement</h3>
+      <button
+      class="close-x"
+      onclick="Modal.close('modal-asset-replacement')"
+      >
+      ✕
+      </button>
+    </div>
+    <div class="modal-body">
+      <input
+      type="hidden"
+      id="replace-point-id"
+      >
+      <div
+      id="replace-unit-info"
+      style="
+      margin-bottom:20px;
+      font-weight:600;
+      "
+      >
+      </div>
+      <div class="field">
+        <label>
+        Manufacture Year Baru
+        </label>
+        <select id="replace-manufacture-date"></select>
+      </div>
+      <div class="field">
+        <label>
+        Expired Year Baru
+        </label>
+        <select id="replace-expired-date"></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button
+      class="btn btn-ghost"
+      onclick="Modal.close('modal-asset-replacement')"
+      >
+      Batal
+      </button>
+      <button
+      class="btn btn-primary"
+      onclick="AssetReplacement.save()"
+      >
+      Simpan
+      </button>
+    </div>
+  </div>
+</div>
 <script>
 /* =====================================================================
    SIAPA — APP CONFIG
@@ -1302,12 +1355,26 @@ const App = {
   period: { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
   maps: [], points: [], records: [], findings: [], users: [],
   activeMapId: null,
+  expiredAparCount: 0,
+  aparTablePage: 1,
+  aparTablePageSize: 10,
 
   async loadAll(){
     [this.maps, this.points, this.records, this.findings] = await Promise.all([Store.getMaps(), Store.getPoints(), Store.getRecords(), Store.getFindings()]);
     console.log(
   this.records
 );
+const currentYear =
+  new Date().getFullYear();
+this.expiredAparCount =
+  this.points.filter(p => {
+    const year =
+      parseInt(p.expiredDate);
+    return (
+      !isNaN(year) &&
+      year <= currentYear
+    );
+  }).length;
     if(Auth.isAdmin()) this.users = await Store.getUsers();
   },
 
@@ -1359,13 +1426,14 @@ const App = {
     const role = Auth.current.role;
     const items = NAV_ITEMS.filter(n=>n.roles.includes(role));
     const openFindingCount = this.findings.filter(f => f.status === "OPEN").length;
+    const expiredAparCount = this.expiredAparCount;
     let html = "", lastSection = null;
     for(const item of items){
       if(item.section && item.section !== lastSection){
         html += `<div class="nav-section-label">${item.section}</div>`;
         lastSection = item.section;
       }
-      html += `<div class="nav-item ${this.view===item.id?"active":""}" onclick="App.go('${item.id}')">${item.icon}<span>${item.id === "findings"? `${item.label} (${openFindingCount})`: item.label}</span></div>`;
+      html += `<div class="nav-item ${this.view===item.id?"active":""}" onclick="App.go('${item.id}')">${item.icon}<span>${item.id === "findings"? `${item.label} (${openFindingCount})`: item.id === "map" ? `${item.label} (${expiredAparCount})` : item.label}</span></div>`;
     }
     document.getElementById("nav-list").innerHTML = html;
     // mobile nav: dashboard, map, report, +settings(admin) only, max 4
@@ -1633,7 +1701,11 @@ style="background-image:url('sop-hydrant.jpg')">
 <div class="small-desc">Petunjuk penggunaan Hydrant</div>
 </div>
 </div>
-</div>`;
+</div>
+<hr>
+<h3>Detail Informasi APAR</h3>
+${Views.aparInformationTable()}
+`;
   },
 
   mapDetail(mapId){
@@ -1844,6 +1916,221 @@ style="background-image:url('sop-hydrant.jpg')">
       <table><thead><tr><th>Nama</th><th>Username</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table>
     </div>`;
   },
+aparInformationTable(){
+  const apars =
+    App.points.filter(
+      p => p.type === "APAR"
+    );
+  const pageSize =
+    App.aparTablePageSize;
+  const currentPage =
+    App.aparTablePage;
+  const totalRows =
+    apars.length;
+  const totalPages =
+    Math.ceil(totalRows / pageSize) || 1;
+  const start =
+    (currentPage - 1) * pageSize;
+  const end =
+    start + pageSize;
+  const pageData =
+    apars.slice(start, end);
+const currentYear =
+  new Date().getFullYear();
+const warningCount =
+  apars.filter(p => {
+    const year =
+      parseInt(p.expiredDate);
+    return year === currentYear;
+  }).length;
+const expiredCount =
+  apars.filter(p => {
+    const year =
+      parseInt(p.expiredDate);
+    return year < currentYear;
+  }).length;
+const rows =
+pageData.map(p => {
+let rowStyle = "";
+const expiredYear =
+  parseInt(p.expiredDate);
+if(!isNaN(expiredYear)){
+  if(expiredYear < currentYear){
+    rowStyle =
+      "background:#fdecec;";
+  }else if(expiredYear === currentYear){
+    rowStyle =
+      "background:#fff7e0;";
+  }
+}
+return `
+<tr style="${rowStyle}">
+  <td>${p.jenis || "-"}</td>
+  <td>${p.number || "-"}</td>
+  <td>${p.lokasi || "-"}</td>
+  <td>${p.manufactureDate || "-"}</td>
+  <td>${p.expiredDate || "-"}</td>
+  <td><button class="icon-btn"title="Replace Asset"onclick="AssetReplacement.open('${p.id}')">🔄</button></td>
+</tr>
+`;
+}).join("");
+  let pages = "";
+  for(let i=1;i<=totalPages;i++){
+    pages += `
+      <button
+        class="btn btn-sm ${i===currentPage ? 'btn-primary' : 'btn-ghost'}"
+        onclick="AparTable.goPage(${i})"
+      >
+        ${i}
+      </button>
+    `;
+  }
+  return `
+  <div class="card">
+    <div
+      style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:15px;
+      flex-wrap:wrap;
+      gap:10px;
+      "
+    >
+<div
+style="
+font-size:13px;
+color:#667085;
+font-weight:500;
+"
+>
+Show
+<select
+onchange="AparTable.changePageSize(this.value)"
+style="
+padding:6px;
+border-radius:8px;
+"
+>
+<option value="10"
+${pageSize==10?'selected':''}>
+10
+</option>
+<option value="20"
+${pageSize==20?'selected':''}>
+20
+</option>
+<option value="50"
+${pageSize==50?'selected':''}>
+50
+</option>
+<option value="100"
+${pageSize==100?'selected':''}>
+100
+</option>
+</select>
+entries
+</div>
+<div
+style="
+display:flex;
+gap:10px;
+align-items:center;
+flex-wrap:wrap;
+justify-content:center;
+"
+>
+<span
+style="
+background:#fff7e0;
+color:#b7791f;
+padding:6px 12px;
+border-radius:20px;
+font-size:12px;
+font-weight:700;
+"
+>
+🟡 Expired Tahun Ini : ${warningCount}
+</span>
+<span
+style="
+background:#fdecec;
+color:#c53030;
+padding:6px 12px;
+border-radius:20px;
+font-size:12px;
+font-weight:700;
+"
+>
+🔴 Sudah Expired : ${expiredCount}
+</span>
+</div>
+<div
+style="
+font-size:13px;
+color:#667085;
+font-weight:500;
+"
+>
+Showing
+${Math.min(start+1,totalRows)}
+-
+${Math.min(end,totalRows)}
+of
+${totalRows}
+entries
+</div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>JENIS</th>
+            <th>UNIT</th>
+            <th>LOKASI</th>
+            <th>MANUFACTURE YEAR</th>
+            <th>EXPIRED YEAR</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+<div
+style="
+margin-top:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+gap:10px;
+"
+>
+
+<div
+style="
+display:flex;
+gap:5px;
+flex-wrap:wrap;
+"
+>
+${pages}
+</div>
+
+<button
+class="btn btn-success btn-sm"
+onclick="AparTable.downloadExcel()"
+>
+⬇ Download Excel
+</button>
+
+</div>
+  </div>
+  `;
+},
+
 
   adminConnection(){
     return `
@@ -2593,6 +2880,84 @@ scan(){Modal.close("modal-asset-info");
 Scanner.open();
   }
 };
+const AssetReplacement = {
+  open(pointId){
+    const point =
+      App.points.find(
+        p => p.id === pointId
+      );
+    if(!point) return;
+    document.getElementById(
+      "replace-point-id"
+    ).value =
+      point.id;
+    document.getElementById(
+      "replace-unit-info"
+    ).innerHTML =
+      `
+      ${point.jenis}
+      - Unit ${point.number}
+      `;
+const thisYear =
+  new Date().getFullYear();
+let yearOptions = "";
+for(let y=2010; y<=2045; y++){
+  yearOptions +=
+  `
+  <option value="${y}">
+    ${y}
+  </option>
+  `;
+}
+document.getElementById(
+  "replace-manufacture-date"
+).innerHTML =
+  yearOptions;
+document.getElementById(
+  "replace-expired-date"
+).innerHTML =
+  yearOptions;
+document.getElementById(
+  "replace-manufacture-date"
+).value =
+  point.manufactureDate || thisYear;
+document.getElementById(
+  "replace-expired-date"
+).value =
+  point.expiredDate || thisYear;
+    Modal.open(
+      "modal-asset-replacement"
+    );
+  },
+  async save(){
+    const pointId =
+      document.getElementById(
+        "replace-point-id"
+      ).value;
+    const point =
+      App.points.find(
+        p => p.id === pointId
+      );
+    if(!point) return;
+    point.manufactureDate =
+      document.getElementById(
+        "replace-manufacture-date"
+      ).value;
+    point.expiredDate =
+      document.getElementById(
+        "replace-expired-date"
+      ).value;
+    await Store.savePoint(point);
+    Modal.close(
+      "modal-asset-replacement"
+    );
+    toast(
+      "Asset berhasil diperbarui",
+      "success"
+    );
+    App.render();
+  }
+};
 const Report = {
 openMap(pointId){
 const point =App.points.find(p => p.id === pointId);
@@ -2851,7 +3216,51 @@ window.open(`https://www.google.com/maps/search/?api=1&query=${point.latitude},$
   },500);
 },
 };
-
+const AparTable = {
+  async goPage(page){
+    App.aparTablePage = page;
+    await App.render();
+  },
+  async changePageSize(size){
+    App.aparTablePageSize =
+      Number(size);
+    App.aparTablePage = 1;
+    await App.render();
+  },
+  downloadExcel(){
+    let csv =
+      "JENIS,UNIT,LOKASI,MANUFACTURE YEAR,EXPIRED YEAR\n";
+    const apars =
+      App.points.filter(
+        p => p.type === "APAR"
+      );
+    apars.forEach(p => {
+      csv +=
+      `"${p.jenis || ""}",` +
+      `"${p.number || ""}",` +
+      `"${p.lokasi || ""}",` +
+      `"${p.manufactureDate || ""}",` +
+      `"${p.expiredDate || ""}"\n`;
+    });
+    const blob =
+      new Blob(
+        [csv],
+        {
+          type:
+          "text/csv;charset=utf-8;"
+        }
+      );
+    const url =
+      URL.createObjectURL(blob);
+    const a =
+      document.createElement("a");
+    a.href = url;
+    a.download =
+      "Detail_Informasi_APAR.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+};
 // isi tabel laporan setiap kali view report dirender
 const _origRender = App.render.bind(App);
 App.render = async function(){
