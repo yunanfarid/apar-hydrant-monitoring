@@ -2999,10 +2999,26 @@ window.open(`https://www.google.com/maps/search/?api=1&query=${point.latitude},$
       if(statusF && statusF!==status) continue;
       count++;
       const statusBadge = status==="green" ? '<span class="badge green">Sudah Dicek</span>' : status==="orange" ? '<span class="badge orange">Perlu Perhatian</span>' : '<span class="badge red">Belum Dicek</span>';
-      html += `<tr>
-        <td>${TYPE_LABEL[p.type]}</td>
-        <td><b>${escapeHtml(p.number)}</b> <span class="mono muted" style="font-size:11px;">${escapeHtml(p.barcode)}</span></td>
-        <td>${escapeHtml(mapName(p.mapId))}</td>
+html += `<tr>
+<td>
+${escapeHtml(
+  p.jenis || TYPE_LABEL[p.type]
+)}
+</td>
+<td>
+<b>${escapeHtml(p.number)}</b>
+<span
+class="mono muted"
+style="font-size:11px;"
+>
+${escapeHtml(p.barcode)}
+</span>
+</td>
+<td>
+${escapeHtml(
+  p.lokasi || mapName(p.mapId)
+)}
+</td>
         <td>${statusBadge}</td>
         <td>${rec ? (rec.gpsStatus === "VALID" ? `✅ ${rec.distanceMeter} m`: `❌ ${rec.distanceMeter || "-"} m`): "-"}</td>
         <td>${rec?escapeHtml(rec.checkerName):"-"}</td>
@@ -3028,7 +3044,7 @@ window.open(`https://www.google.com/maps/search/?api=1&query=${point.latitude},$
     document.getElementById("record-detail-body").innerHTML = `
       <div class="point-info-card">
         <div class="icon-badge" style="background:${TYPE_COLOR[point.type]}">${iconFor(point.type)}</div>
-        <div><h4>${TYPE_LABEL[point.type]} — Unit #${escapeHtml(point.number)}</h4><div class="code">${escapeHtml(point.barcode)} · ${escapeHtml(mapName)}</div></div>
+        <div><h4>${point.jenis || TYPE_LABEL[point.type]} — Unit #${escapeHtml(point.number)}</h4><div class="code">${escapeHtml(point.barcode)} · ${escapeHtml(point.lokasi || mapName)}</div></div>
       </div>
       <p style="font-size:13px;"><b>Periode:</b> ${MONTH_NAMES[rec.month]} ${rec.year} &nbsp; <b>Checker:</b> ${escapeHtml(rec.checkerName)} (${rec.checkerRole}) &nbsp; <b>Waktu:</b> ${new Date(rec.timestamp).toLocaleString("id-ID")}</p>
       <p style="font-size:13px;margin-top:10px;font-weight:600;color:#344054;">Validasi Checker : ${rec.distanceMeter || "-"} meter${rec.gpsStatus === "VALID" ? "✅" : "❌"}</p>
@@ -3045,9 +3061,9 @@ window.open(`https://www.google.com/maps/search/?api=1&query=${point.latitude},$
     for(const p of App.points){
       const rec = App.records.find(r=>r.pointId===p.id && r.year===year && r.month===month);
       const mapName = App.maps.find(m=>m.id===p.mapId)?.name || "-";
-      if(!rec){ csv += `${TYPE_LABEL[p.type]},${p.number},${p.barcode},${mapName},,BELUM DICEK,,,\n`; continue; }
+      if(!rec){ csv += `${p.jenis || TYPE_LABEL[p.type]},${p.number},${p.barcode},${p.lokasi || mapName},,BELUM DICEK,,,\n`; continue; }
       for(const it of rec.items){
-        csv += `${TYPE_LABEL[p.type]},${p.number},${p.barcode},${mapName},${it.name},${it.status},"${(rec.notes||"").replace(/"/g,'""')}",${rec.checkerName},${rec.timestamp}\n`;
+        csv += `${p.jenis || TYPE_LABEL[p.type]},${p.number},${p.barcode},${p.lokasi || mapName},${it.name},${it.status},"${(rec.notes||"").replace(/"/g,'""')}",${rec.checkerName},${rec.timestamp}\n`;
       }
     }
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -3104,9 +3120,9 @@ window.open(`https://www.google.com/maps/search/?api=1&query=${point.latitude},$
 
   detailRows += `
     <tr>
-    <td>${TYPE_LABEL[p.type]}</td>
+    <td>${p.jenis || TYPE_LABEL[p.type]}</td>
     <td>${p.number}</td>
-    <td>${mapName}</td>
+    <td>${p.lokasi || mapName}</td>
     <td>${status}</td>
     <td>${rec? `${rec.distanceMeter || "-"} m ${rec.gpsStatus === "VALID"? "✅": "❌"}`: "-"}</td>
     <td>${rec?.checkerName || "-"}</td>
