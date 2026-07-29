@@ -212,6 +212,25 @@ text-align:center;
   overflow:hidden;transition:box-shadow .15s, transform .15s;
 }
 .map-card:hover{box-shadow:0 12px 26px -14px rgba(16,24,40,0.25);transform:translateY(-2px);}
+.map-card.warning{
+border:2px solid #f5a524;
+animation:
+warningGlow 2s infinite ease-in-out;
+}
+@keyframes warningGlow{
+0%{
+box-shadow:
+0 0 10px rgba(245,165,36,.25);
+}
+50%{
+box-shadow:
+0 0 25px rgba(245,165,36,.65);
+}
+100%{
+box-shadow:
+0 0 10px rgba(245,165,36,.25);
+}
+}
 .map-card .thumb{height:140px;background:#e9edf1 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--text-500);font-size:12px;position:relative;}
 .map-card .thumb .badge-count{position:absolute;top:8px;right:8px;background:rgba(15,26,36,0.75);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700;}
 .map-card .body{padding:14px 16px 16px;}
@@ -1583,11 +1602,25 @@ const Views = {
     }).join("");
     const cards = App.maps.map(m=>{
       const mPoints = points.filter(p=>p.mapId===m.id);
+let cardClass = "";
+const hasWarning =
+  mPoints.some(
+    p =>
+    statusOf(
+      p.id,
+      App.records,
+      year,
+      month
+    ) === "orange"
+  );
+if(hasWarning){
+  cardClass = "warning";
+}
       const mDone = mPoints.filter(p=>statusOf(p.id,App.records,year,month)!=="red").length;
       const mPct = mPoints.length ? Math.round((mDone/mPoints.length)*100) : 0;
       const thumbStyle = m.image ? `background-image:url('${m.image}')` : "";
       return `
-      <div class="map-card" onclick="App.openMap('${m.id}')">
+      <div class="map-card ${cardClass}" onclick="App.openMap('${m.id}')">
         <div class="thumb" style="${thumbStyle}">
           ${!m.image?"Belum ada denah":""}
           <div class="badge-count">${mPoints.length} titik</div>
