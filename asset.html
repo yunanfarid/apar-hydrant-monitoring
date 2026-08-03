@@ -234,14 +234,31 @@ if(data.status === "ADA TEMUAN"){
   statusIcon = "⚠";
 }
 let findingHtml = "Tidak Ada";
-const currentPeriod =
-  new Date().toLocaleDateString(
+const now = new Date();
+
+const currentYear =
+  now.getFullYear();
+
+const currentMonth =
+  now.getMonth();
+
+const lastDay =
+  new Date(
+    currentYear,
+    currentMonth + 1,
+    0
+  ).getDate();
+
+const monthName =
+  now.toLocaleDateString(
     "id-ID",
     {
-      month:"long",
-      year:"numeric"
+      month:"long"
     }
   );
+
+const nextInspection =
+  `25 - ${lastDay} ${monthName} ${currentYear}`;
 
 if(
   data.findingDetails &&
@@ -292,7 +309,8 @@ if(
   font-size:14px;
   font-weight:600;
 ">
-  Periode : ${currentPeriod}
+  Pemeriksaan Selanjutnya :
+  ${nextInspection}
 </div>
 
     <div style="
