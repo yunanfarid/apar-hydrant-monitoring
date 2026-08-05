@@ -849,6 +849,13 @@ color:#f5a524;
         <label>Nama Lengkap</label>
         <input type="text" id="user-edit-name" placeholder="mis. Budi Santoso">
       </div>
+      <div class="field">
+  <label>Email</label>
+  <input
+    type="email"
+    id="user-edit-email"
+    placeholder="nama@email.com">
+</div>
       <div class="row2">
         <div class="field">
           <label>Username</label>
@@ -1147,7 +1154,36 @@ const Store = {
     }
     return await this._gas("deletePoint", { id });
   },
-
+async requestOtp(userId){
+  return await this._gas(
+    "requestOtp",
+    {
+      userId
+    }
+  );
+},
+async verifyOtp(
+  userId,
+  otp
+){
+  return await this._gas(
+    "verifyOtp",
+    {
+      userId,
+      otp
+    }
+  );
+},
+async validateSession(
+  token
+){
+  return await this._gas(
+    "validateSession",
+    {
+      token
+    }
+  );
+},
   // ---------- IMAGES (disimpan ke Google Drive saat mode 'gas') ----------
   async uploadImage(dataUrl){
     if(this.mode==="local") return dataUrl; // base64 langsung, tersimpan di localStorage
@@ -1306,30 +1342,160 @@ const Modal = {
   open(id){ document.getElementById(id).classList.add("active"); },
   close(id){ document.getElementById(id).classList.remove("active"); },
 };
-
+let otpCooldown = null;
+function showOtpModal(){
+  Modal.open("otp-modal");
+  startOtpCooldown();
+}
+function startOtpCooldown(){
+  let remain = 60;
+  const btn =
+    document.getElementById(
+      "btn-resend-otp"
+    );
+  const txt =
+    document.getElementById(
+      "otp-countdown"
+    );
+  btn.disabled = true;
+  if(otpCooldown){
+    clearInterval(otpCooldown);
+  }
+  txt.textContent =
+    `Kirim ulang OTP dalam ${remain} detik`;
+  otpCooldown = setInterval(()=>{
+    remain--;
+    txt.textContent =
+      `Kirim ulang OTP dalam ${remain} detik`;
+    if(remain <= 0){
+      clearInterval(
+        otpCooldown
+      );
+      btn.disabled = false;
+      txt.textContent =
+        "Tidak menerima OTP?";
+    }
+  },1000);
+}
+async function resendOtp(){
+  try{
+    await Store.requestOtp(
+      Auth.pendingUser.id
+    );
+    toast(
+      "OTP baru berhasil dikirim",
+      "success"
+    );
+    startOtpCooldown();
+  }catch(err){
+    toast(
+      err.message,
+      "error"
+    );
+  }
+}
+function closeOtpModal(){
+  if(otpCooldown){
+    clearInterval(
+      otpCooldown
+    );
+  }
+  Auth.pendingUser = null;
+  document
+    .getElementById("otp-input")
+    .value = "";
+  Modal.close("otp-modal");
+}
+async function verifyOtpLogin(){
+  const otp =
+    document
+      .getElementById("otp-input")
+      .value
+      .trim();
+  if(!otp){
+    toast(
+      "Masukkan OTP",
+      "error"
+    );
+    return;
+  }
+  try{
+    const result =
+      await Store.verifyOtp(
+        Auth.pendingUser.id,
+        otp
+      );
+    Auth.current =
+      result.user;
+    Auth.sessionToken =
+      result.token;
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify(result.user)
+    );
+    localStorage.setItem(
+      "sigap_token",
+      result.token
+    );
+    Modal.close("otp-modal");
+    document
+      .getElementById("login-screen")
+      .style.display = "none";
+    document
+      .getElementById("app")
+      .classList.add("active");
+    await App.render();
+    App.buildPeriodOptions();
+    toast(
+      "Login berhasil",
+      "success"
+    );
+  }catch(err){
+    toast(
+      err.message,
+      "error"
+    );
+  }
+}
 /* =====================================================================
    AUTH
 ===================================================================== */
 const SESSION_KEY = "sigap_session_v1";
 const Auth = {
   current: null,
+  pendingUser: null,
+  sessionToken: null,
   async tryLogin(username, password){
-    const user = await Store.login(username, password);
-    if(!user){ return false; }
-    this.current = user;
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    return true;
+    const user =
+      await Store.login(
+        username,
+        password
+      );
+    if(!user){
+      return false;
+    }
+    this.pendingUser = user;
+    await Store.requestOtp(
+      user.id
+    );
+    showOtpModal();
+    return "OTP_SENT";
   },
   restore(){
     const raw = sessionStorage.getItem(SESSION_KEY);
     if(raw){ this.current = JSON.parse(raw); return true; }
     return false;
   },
-  logout(){
-    sessionStorage.removeItem(SESSION_KEY);
-    this.current = null;
-    location.reload();
-  },
+logout(){
+  sessionStorage.removeItem(
+    SESSION_KEY
+  );
+  localStorage.removeItem(
+    "sigap_token"
+  );
+  this.current = null;
+  location.reload();
+},
   isAdmin(){ return this.current && this.current.role === "admin"; },
 };
 
@@ -1342,8 +1508,13 @@ document.getElementById("login-form").addEventListener("submit", async (e)=>{
   const btn = e.target.querySelector("button");
   btn.disabled = true; btn.textContent = "Memeriksa...";
   try{
-    const ok = await Auth.tryLogin(u, p);
-    if(ok){ boot(); }
+    const result = await Auth.tryLogin(u, p);
+    if(result === "OTP_SENT"){
+return;
+}
+if(result){
+boot();
+}
     else { errBox.textContent = "Username atau password salah."; errBox.classList.remove("hidden"); }
   }catch(err){
     errBox.textContent = "Gagal terhubung ke server data: "+err.message;
@@ -1521,6 +1692,33 @@ this.expiredAparCount =
 };
 
 async function boot(){
+const token =
+  localStorage.getItem(
+    "sigap_token"
+  );
+if(token){
+  try{
+    const session =
+      await Store.validateSession(
+        token
+      );
+    if(!session){
+      localStorage.removeItem(
+        "sigap_token"
+      );
+      sessionStorage.removeItem(
+        SESSION_KEY
+      );
+    }
+  }catch(err){
+    localStorage.removeItem(
+      "sigap_token"
+    );
+    sessionStorage.removeItem(
+      SESSION_KEY
+    );
+  }
+}
   await Store.init();
   document.getElementById("login-mode-label").textContent = Store.mode==="gas" ? "Online" : "Lokal (browser ini saja)";
   if(Auth.restore()){
@@ -1936,6 +2134,7 @@ ${Views.aparInformationTable()}
     const rows = App.users.map(u=>`
       <tr>
         <td><b>${escapeHtml(u.name)}</b></td>
+        <td>${escapeHtml(u.email || "-")}</td>
         <td class="mono">${escapeHtml(u.username)}</td>
         <td><span class="badge ${u.role==='admin'?'orange':'gray'}">${u.role}</span></td>
         <td style="text-align:right;"><button class="icon-btn" onclick="Admin.editUser('${u.id}')">✎</button></td>
@@ -1946,7 +2145,7 @@ ${Views.aparInformationTable()}
         <div><h3>Pengguna Sistem</h3><p>Anda (admin), Vendor 1, dan Vendor 2 dapat login dan mengisi checklist. Hanya admin yang bisa mengubah pengaturan.</p></div>
         <button class="btn btn-primary btn-sm" onclick="Admin.newUser()">+ Tambah Pengguna</button>
       </div>
-      <table><thead><tr><th>Nama</th><th>Username</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <table><thead><tr><th>Nama</th><th>Email</th><th>Username</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table>
     </div>`;
   },
 aparInformationTable(){
@@ -2469,6 +2668,7 @@ const Admin = {
     document.getElementById("modal-user-title").textContent = "Tambah Pengguna";
     document.getElementById("user-edit-id").value = "";
     document.getElementById("user-edit-name").value = "";
+    document.getElementById("user-edit-email").value = "";
     document.getElementById("user-edit-username").value = "";
     document.getElementById("user-edit-role").value = "vendor1";
     document.getElementById("user-edit-password").value = "";
@@ -2481,6 +2681,7 @@ const Admin = {
     document.getElementById("modal-user-title").textContent = "Ubah Pengguna";
     document.getElementById("user-edit-id").value = u.id;
     document.getElementById("user-edit-name").value = u.name;
+    document.getElementById("user-edit-email").value = u.email || "";
     document.getElementById("user-edit-username").value = u.username;
     document.getElementById("user-edit-role").value = u.role;
     document.getElementById("user-edit-password").value = "";
@@ -2490,6 +2691,7 @@ const Admin = {
   },
   async saveUser(){
     const name = document.getElementById("user-edit-name").value.trim();
+    const email =document.getElementById("user-edit-email").value.trim();
     const username = document.getElementById("user-edit-username").value.trim();
     const role = document.getElementById("user-edit-role").value;
     const password = document.getElementById("user-edit-password").value;
@@ -2498,7 +2700,7 @@ const Admin = {
     const dup = App.users.find(u=>u.username===username && u.id!==id);
     if(dup){ toast("Username sudah dipakai", "error"); return; }
     if(!id && !password){ toast("Password wajib diisi untuk pengguna baru", "error"); return; }
-    await Store.saveUser({ id, name, username, role, password });
+    await Store.saveUser({ id, name, username, role, email, password });
     Modal.close("modal-user");
     toast("Pengguna tersimpan", "success");
     App.render();
@@ -3320,7 +3522,83 @@ App.render = async function(){
 <script>
 // Semua modul sudah dimuat — jalankan aplikasi.
 boot();
+setInterval(
+  async ()=>{
+    const token =
+      localStorage.getItem(
+        "sigap_token"
+      );
+    if(!token){
+      return;
+    }
+    try{
+      const session =
+        await Store.validateSession(
+          token
+        );
+      if(!session){
+        alert(
+          "Session login telah berakhir"
+        );
+        Auth.logout();
+      }
+    }catch(err){
+      Auth.logout();
+    }
+  },
+  60000
+);
 </script>
+<div class="modal-overlay" id="otp-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+  <h3>Verifikasi OTP</h3>
+  <button
+    class="close-x"
+    onclick="closeOtpModal()">
+
+    ✕
+  </button>
+</div>
+    <div class="modal-body">
+      <p>
+        Kode OTP sudah dikirim ke email Anda.
+      </p>
+      <div class="field">
+        <label>OTP</label>
+        <input
+          type="text"
+          id="otp-input"
+          maxlength="6"
+          placeholder="Masukkan OTP">
+      </div>
+<div
+  id="otp-countdown"
+  style="
+    margin-top:10px;
+    color:#667085;
+    font-size:13px;
+  ">
+  Kirim ulang OTP dalam 60 detik
+</div>
+<button
+  id="btn-resend-otp"
+  class="btn btn-ghost"
+  style="margin-top:10px"
+  onclick="resendOtp()"
+  disabled>
+  Kirim Ulang OTP
+</button>
+    </div>
+    <div class="modal-foot">
+      <button
+        class="btn btn-primary"
+        onclick="verifyOtpLogin()">
+        Verifikasi
+      </button>
+    </div>
+  </div>
+</div>
 <div id="loading-overlay"class="hidden"><div class="loading-box">
   <div class="loader"></div>
     <div id="loading-text">Loading...
