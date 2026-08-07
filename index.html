@@ -668,7 +668,14 @@ color:#f5a524;
 
   </div>
   <div class="mobile-nav" id="mobile-nav-list"></div>
-
+  <button
+  class="scan-fab no-print"
+  id="ai-fab-btn"
+  onclick="AIAssistant.open()"
+  title="SIAPA AI Assistant"
+  style="bottom:100px;">
+  🤖
+</button>
   <button class="scan-fab no-print" id="scan-fab-btn" onclick="Scanner.open()" title="Scan barcode APAR/Hydrant">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
   </button>
@@ -989,6 +996,57 @@ color:#f5a524;
       >
       Simpan
       </button>
+    </div>
+  </div>
+</div>
+<div
+  class="modal-overlay"
+  id="modal-ai">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>
+        🤖 SIAPA AI Assistant
+      </h3>
+      <button
+        class="close-x"
+        onclick="Modal.close('modal-ai')">
+        ✕
+      </button>
+    </div>
+    <div class="modal-body">
+      <div
+        class="flex flex-col gap-12">
+        <button
+          class="btn btn-ghost"
+          onclick="AIAssistant.summary()">
+          Ringkasan Bulan Ini
+        </button>
+        <button
+          class="btn btn-ghost"
+          onclick="AIAssistant.riskLocation()">
+          Lokasi Paling Berisiko
+        </button>
+        <button
+          class="btn btn-ghost"
+          onclick="AIAssistant.topFindings()">
+          Top Temuan
+        </button>
+        <button
+          class="btn btn-ghost"
+          onclick="AIAssistant.expiredAssets()">
+          Asset Mendekati Expired
+        </button>
+        <button
+  class="btn btn-primary"
+  onclick="AIAssistant.executiveSummary()">
+  Generate Executive Summary
+</button>
+      </div>
+      <hr>
+      <div
+        id="ai-result">
+        Pilih pertanyaan di atas.
+      </div>
     </div>
   </div>
 </div>
@@ -1680,17 +1738,25 @@ this.expiredAparCount =
     else if(this.view==="admin-users") root.innerHTML = Views.adminUsers();
     else if(this.view==="admin-connection") root.innerHTML = Views.adminConnection();
     const zoomControls = document.getElementById("map-zoom-controls");
+    const aiBtn =
+  document.getElementById(
+    "ai-fab-btn"
+  );
+if(aiBtn){
+  aiBtn.style.display =
+    this.view === "dashboard"
+      ? "flex"
+      : "none";
+}
     if(zoomControls){ zoomControls.style.display = this.view === "mapdetail" ? "flex" : "none"; }
     if(this.view==="mapdetail") MapViewer.afterRender();
     if(this.view==="admin-barcode") Barcode.afterRender();
   },
-
   async openMap(mapId){Loading.show("Memuat peta lokasi...");
   try{this.activeMapId = mapId; this.view = "mapdetail"; await this.render();}
   finally{Loading.hide();}
   },
 };
-
 async function boot(){
 const token =
   localStorage.getItem(
@@ -3192,6 +3258,405 @@ document.getElementById(
     );
     App.render();
   }
+};
+const AIAssistant = {
+open(){
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = `
+    🤖 <b>SIAPA AI Assistant</b>
+    <br><br>
+    Saya dapat membantu menganalisa:
+    <br><br>
+    • Progress inspeksi
+    <br>
+    • Lokasi paling berisiko
+    <br>
+    • Temuan terbanyak
+    <br>
+    • Asset mendekati expired
+    <br><br>
+    Silakan pilih analisa di atas.
+  `;
+  Modal.open(
+    "modal-ai"
+  );
+},
+  summary(){
+    const year =
+      App.period.year;
+    const month =
+      App.period.month;
+    const total =
+      App.points.length;
+    let checked = 0;
+    let findings = 0;
+    App.records
+      .filter(
+        r =>
+          r.year == year &&
+          r.month == month
+      )
+      .forEach(rec => {
+        checked++;
+        const bad =
+          (rec.items || [])
+          .filter(
+            i =>
+              i.status === "R" ||
+              i.status === "T.A"
+          ).length;
+        findings += bad;
+      });
+    const progress =
+      total
+      ? (
+          (checked / total) * 100
+        ).toFixed(1)
+      : 0;
+    document.getElementById(
+      "ai-result"
+    ).innerHTML = `
+      <b>📋 Ringkasan Bulan Ini</b>
+      <br><br>
+      Total Unit :
+      <b>${total}</b>
+      <br>
+      Sudah Dicek :
+      <b>${checked}</b>
+      <br>
+      Progress :
+      <b>${progress}%</b>
+      <br>
+      Total Temuan :
+      <b>${findings}</b>
+      <br><br>
+      💡 Rekomendasi:
+      ${
+        progress < 80
+        ? "Percepat inspeksi pada unit yang belum diperiksa."
+        : "Progress inspeksi sudah baik, fokus pada penyelesaian temuan."
+      }
+    `;
+  },
+riskLocation(){
+  const year =
+    App.period.year;
+  const month =
+    App.period.month;
+  let risks = [];
+  App.maps.forEach(map => {
+    const points =
+      App.points.filter(
+        p => p.mapId === map.id
+      );
+    let unchecked = 0;
+    let findings = 0;
+    points.forEach(point => {
+      const rec =
+        App.records.find(
+          r =>
+            r.pointId === point.id &&
+            r.year == year &&
+            r.month == month
+        );
+      if(!rec){
+        unchecked++;
+      }else{
+        findings +=
+          (rec.items || [])
+          .filter(
+            i =>
+              i.status === "R" ||
+              i.status === "T.A"
+          ).length;
+      }
+    });
+    const score =
+      (unchecked * 3)
+      + findings;
+    risks.push({
+      name : map.name,
+      unchecked,
+      findings,
+      score
+    });
+  });
+  risks.sort(
+    (a,b)=>b.score-a.score
+  );
+  const top =
+    risks[0];
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = `
+    <b>
+      🏆 Lokasi Paling Berisiko
+    </b>
+    <br><br>
+    Lokasi :
+    <b>
+      ${top.name}
+    </b>
+    <br>
+    Unit Belum Dicek :
+    <b>
+      ${top.unchecked}
+    </b>
+    <br>
+    Total Temuan :
+    <b>
+      ${top.findings}
+    </b>
+    <br><br>
+    AI Risk Score :
+    <b>
+      ${top.score}
+    </b>
+    <br><br>
+    💡 Rekomendasi:
+    Prioritaskan inspeksi dan
+    penyelesaian temuan pada
+    area ini terlebih dahulu.
+  `;
+},
+topFindings(){
+  const year =
+    App.period.year;
+  const month =
+    App.period.month;
+  const findings = {};
+  App.records
+    .filter(
+      r =>
+        r.year == year &&
+        r.month == month
+    )
+    .forEach(rec => {
+      (rec.items || [])
+      .forEach(item => {
+        if(
+          item.status === "R" ||
+          item.status === "T.A"
+        ){
+          findings[item.name] =
+            (findings[item.name] || 0) + 1;
+        }
+      });
+    });
+  const top =
+    Object.entries(findings)
+      .sort(
+        (a,b)=>b[1]-a[1]
+      )
+      .slice(0,5);
+  let html =
+    `<b>🔥 Top Temuan</b><br><br>`;
+  if(top.length === 0){
+    html +=
+      "Tidak ada temuan pada periode ini.";
+  }else{
+    top.forEach((x,i)=>{
+      html +=
+        `${i+1}. ${x[0]} (${x[1]})<br>`;
+    });
+    html +=
+      `<br><br>
+      💡 AI Insight:
+      <br><br>
+      Temuan terbesar saat ini adalah
+      <b>${top[0][0]}</b>
+      sebanyak
+      <b>${top[0][1]}</b>
+      kasus.
+      <br><br>
+      Direkomendasikan menyiapkan
+      sparepart atau replacement item
+      untuk komponen tersebut.`;
+  }
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = html;
+},
+expiredAssets(){
+  const currentYear =
+    new Date().getFullYear();
+  const warningAssets =
+    App.points.filter(p => {
+      const year =
+        parseInt(
+          p.expiredDate
+        );
+      return (
+        !isNaN(year) &&
+        year <= currentYear
+      );
+    });
+  let html = `
+    <b>
+      📆 Asset Mendekati Expired
+    </b>
+    <br><br>
+  `;
+  if(
+    warningAssets.length === 0
+  ){
+    html += `
+      ✅ Tidak ada asset
+      yang expired.
+    `;
+  }else{
+    html += `
+      Ditemukan
+      <b>
+        ${warningAssets.length}
+      </b>
+      asset yang perlu
+      perhatian.
+      <br><br>
+    `;
+    warningAssets
+      .slice(0,10)
+      .forEach(asset => {
+        html += `
+          • ${asset.jenis || TYPE_LABEL[asset.type]}
+          #${asset.number}
+          (Expired:
+          ${asset.expiredDate})
+          <br>
+        `;
+      });
+    html += `
+      <br><br>
+      💡 AI Insight:
+      <br><br>
+      Segera lakukan
+      penggantian asset yang
+      telah expired untuk
+      menjaga kesiapan sistem
+      proteksi kebakaran.
+
+    `;
+  }
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = html;
+},
+executiveSummary(){
+  const year =
+    App.period.year;
+  const month =
+    App.period.month;
+  const total =
+    App.points.length;
+  const checked =
+    App.records.filter(
+      r =>
+        r.year == year &&
+        r.month == month
+    ).length;
+  const progress =
+    total
+      ? (
+          checked / total * 100
+        ).toFixed(1)
+      : 0;
+  const findings =
+    App.findings.filter(
+      f => f.status === "OPEN"
+    ).length;
+  let highestRisk = "-";
+  let highestScore = -1;
+  App.maps.forEach(map => {
+    const mapPoints =
+      App.points.filter(
+        p => p.mapId === map.id
+      );
+    let unchecked = 0;
+    mapPoints.forEach(point => {
+      const rec =
+        App.records.find(
+          r =>
+            r.pointId === point.id &&
+            r.year == year &&
+            r.month == month
+        );
+      if(!rec){
+        unchecked++;
+      }
+    });
+    if(unchecked > highestScore){
+      highestScore =
+        unchecked;
+      highestRisk =
+        map.name;
+    }
+  });
+  let recommendation = "";
+if(progress < 50){
+  recommendation =
+    "Progress inspeksi masih sangat rendah. Disarankan melakukan percepatan inspeksi di seluruh area.";
+}else if(progress < 80){
+  recommendation =
+    "Progress inspeksi cukup baik namun belum mencapai target. Fokus pada unit yang belum diperiksa.";
+}else if(findings > 10){
+  recommendation =
+    "Jumlah temuan masih tinggi. Prioritaskan corrective action dan monitoring penyelesaian temuan.";
+}else if(findings > 0){
+  recommendation =
+    "Progress inspeksi sudah baik. Fokus pada penyelesaian seluruh temuan yang masih terbuka.";
+}else{
+  recommendation =
+    "Kinerja inspeksi sangat baik. Tidak ditemukan isu signifikan pada periode ini.";
+}
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = `
+    <b>
+      📝 Executive Summary
+    </b>
+    <br><br>
+    Berdasarkan data inspeksi
+    bulan
+    <b>
+      ${MONTH_NAMES[month]}
+      ${year}
+    </b>,
+    terdapat
+    <b>
+      ${total}
+    </b>
+    unit APAR dan Hydrant
+    yang terdaftar.
+    <br><br>
+    Sebanyak
+    <b>
+      ${checked}
+    </b>
+    unit telah diperiksa
+    dengan tingkat progress
+    <b>
+      ${progress}%
+    </b>.
+    <br><br>
+    Saat ini terdapat
+    <b>
+      ${findings}
+    </b>
+    temuan yang masih
+    berstatus OPEN.
+    <br><br>
+    Lokasi yang memerlukan
+    perhatian terbesar adalah
+    <b>
+      ${highestRisk}
+    </b>.
+    <br><br>
+    💡 Rekomendasi:
+<br><br>
+${recommendation}
+  `;
+}
 };
 const Report = {
 openMap(pointId){
