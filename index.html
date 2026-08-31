@@ -2943,12 +2943,42 @@ await Store.saveMap({
     });
   },
   autoBarcode(){
-    const type = this._pendingPointType || "APAR";
-    const num = document.getElementById("point-edit-number").value.trim() || String(App.points.length+1).padStart(3,"0");
-    const mapId = document.getElementById("point-edit-map").value;
-    const mapCode = (App.maps.find(m=>m.id===mapId)?.name || "LOC").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,4);
-    document.getElementById("point-edit-barcode").value = `${TYPE_PREFIX[type]}-${mapCode}-${num.padStart(3,"0")}`;
-  },
+  const type =
+    this._pendingPointType || "APAR";
+  const num =
+    document.getElementById(
+      "point-edit-number"
+    ).value.trim()
+    ||
+    String(
+      App.points.length + 1
+    ).padStart(3,"0");
+  const mapId =
+    document.getElementById(
+      "point-edit-map"
+    ).value;
+  const mapCode =
+    (
+      App.maps.find(
+        m => m.id === mapId
+      )?.name
+      ||
+      "LOC"
+    )
+    .split(" ")
+    .map(w => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0,4);
+  let sitePrefix = "";
+if(App.selectedSite === "SUNTER"){sitePrefix = "SUN-";
+  }
+if(App.selectedSite === "KARAWANG"){sitePrefix = "KRW-";
+  }
+if(App.selectedSite === "NGORO"){sitePrefix = "NGR-";
+  }
+document.getElementById("point-edit-barcode").value = `${sitePrefix}${TYPE_PREFIX[type]}-${mapCode}-${num.padStart(3,"0")}`;
+},
   async savePoint(){
     const number = document.getElementById("point-edit-number").value.trim();
     let barcode = document.getElementById("point-edit-barcode").value.trim();
