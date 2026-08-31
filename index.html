@@ -642,6 +642,7 @@ color:#f5a524;
       <div class="flex items-center gap-12">
         <div class="period-picker">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="2" style="margin-left:6px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <select id="picker-site" onchange="App.onSiteChange()"></select>
           <select id="picker-month" onchange="App.onPeriodChange()"></select>
           <select id="picker-year" onchange="App.onYearChange()"></select>
         </div>
@@ -770,6 +771,7 @@ color:#f5a524;
     </div>
     <div class="modal-body">
       <input type="hidden" id="map-edit-id">
+      <input type="hidden" id="map-edit-siteid">
       <div class="field">
         <label>Nama Lokasi / Peta</label>
         <input type="text" id="map-edit-name" placeholder="mis. OFFICE BUILDING LANTAI 1">
@@ -1016,6 +1018,21 @@ color:#f5a524;
     <div class="modal-body">
       <div
         class="flex flex-col gap-12">
+        <div class="field">
+  <label>
+    🤖 Tanya SIAPA
+  </label>
+  <input
+    type="text"
+    id="ai-question"
+    placeholder="Tanyakan sesuatu ke SIAPA AI...">
+</div>
+<button
+  class="btn btn-dark"
+  onclick="AIAssistant.ask()">
+  Kirim Pertanyaan
+</button>
+<br>
         <button
           class="btn btn-ghost"
           onclick="AIAssistant.summary()">
@@ -1485,6 +1502,12 @@ async function verifyOtpLogin(){
       );
     Auth.current =
       result.user;
+if(result.user.role === "checker"){
+  App.selectedSite =
+    String(
+      result.user.siteId || "CIBITUNG"
+    ).toUpperCase();
+}
     Auth.sessionToken =
       result.token;
     sessionStorage.setItem(
@@ -1503,6 +1526,7 @@ async function verifyOtpLogin(){
       .getElementById("app")
       .classList.add("active");
     await App.render();
+    App.buildSiteOptions();
     App.buildPeriodOptions();
     toast(
       "Login berhasil",
@@ -1600,6 +1624,95 @@ const NAV_ITEMS = [
 
 const App = {
   view: "dashboard",
+  selectedSite : "CIBITUNG",
+  sites : [
+  {id : "CIBITUNG", name : "Cibitung"},
+  {id : "SUNTER", name : "Sunter"},
+  {id : "KARAWANG", name: "Karawang"},
+  {id : "NGORO", name: "Ngoro"}
+],
+siteMaps : {
+ CIBITUNG : {
+   code : "CIB",
+   name : "Cibitung",
+   maps : [
+     "map_ob1",
+     "map_ob2",
+     "map_pio",
+     "map_yard"
+   ]
+ },
+SUNTER : {
+   code : "SUN",
+   name : "Sunter",
+   maps : [
+      "sun_office_delivery",
+      "sun_pio",
+      "sun_yard_atas",
+      "sun_yard_bawah"
+   ]
+},
+ KARAWANG : {
+   code : "KRW",
+   name : "Karawang",
+   maps : []
+ },
+ NGORO : {
+   code : "NGR",
+   name : "Ngoro",
+   maps : []
+ }
+},
+siteData : {
+  SUNTER : {
+    maps : [
+      {
+        id:"sun_office_delivery",
+        name:"OFFICE & DELIVERY",
+        image:""
+      },
+      {
+        id:"sun_pio",
+        name:"PIO BUILDING",
+        image:""
+      },
+      {
+        id:"sun_yard_atas",
+        name:"YARD ATAS",
+        image:""
+      },
+      {
+        id:"sun_yard_bawah",
+        name:"YARD BAWAH",
+        image:""
+      }
+    ],
+    points : [
+      {
+        id:"sun_apar_001",
+        mapId:"sun_office_delivery",
+        type:"APAR",
+        number:"001",
+        barcode:"SUN-APAR-001",
+        jenis:"APAR 6KG",
+        lokasi:"OFFICE & DELIVERY",
+        x:50,
+        y:50
+      },
+      {
+        id:"sun_hyd_001",
+        mapId:"sun_pio",
+        type:"HYDRANT_INDOOR",
+        number:"001",
+        barcode:"SUN-HYIN-001",
+        jenis:"HYDRANT",
+        lokasi:"PIO BUILDING",
+        x:50,
+        y:50
+      }
+    ]
+  }
+},
   period: { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
   maps: [], points: [], records: [], findings: [], users: [],
   activeMapId: null,
@@ -1609,6 +1722,33 @@ const App = {
 
   async loadAll(){
     [this.maps, this.points, this.records, this.findings] = await Promise.all([Store.getMaps(), Store.getPoints(), Store.getRecords(), Store.getFindings()]);
+console.table(this.maps);
+this.maps =
+  this.maps.filter(
+    m =>
+      String(m.siteId)
+        .toUpperCase()
+      ===
+      this.selectedSite
+  );
+this.points =
+  this.points.filter(
+    p =>
+      String(p.siteId)
+        .toUpperCase()
+      ===
+      this.selectedSite
+  );
+/*const siteData =
+  this.siteData[
+    this.selectedSite
+  ];
+if(siteData){
+  this.maps =
+    siteData.maps;
+  this.points =
+    siteData.points;
+}*/
     console.log(
   this.records
 );
@@ -1625,7 +1765,44 @@ this.expiredAparCount =
   }).length;
     if(Auth.isAdmin()) this.users = await Store.getUsers();
   },
-
+buildSiteOptions(){
+  const sel =
+    document.getElementById(
+      "picker-site"
+    );
+  if(!sel) return;
+  sel.innerHTML =
+    this.sites.map(site => `
+      <option
+        value="${site.id}"
+        ${site.id===this.selectedSite
+          ? "selected"
+          : ""}
+      >
+        ${site.name}
+      </option>
+    `).join("");
+},
+async onSiteChange(){
+  if(
+    Auth.current.role === "checker"
+  ){
+    document.getElementById(
+      "picker-site"
+    ).value =
+    App.selectedSite;
+    return;
+  }
+  this.selectedSite =
+    document.getElementById(
+      "picker-site"
+    ).value;
+  console.log(
+    "SITE BERUBAH : ",
+    this.selectedSite
+  );
+  await this.render();
+},
   buildPeriodOptions(){
     const yearSel = document.getElementById("picker-year");
     const monthSel = document.getElementById("picker-month");
@@ -1702,7 +1879,7 @@ this.expiredAparCount =
   },
 
   titleFor(viewId){
-    const map = { dashboard:["Dashboard","Ringkasan status pemeriksaan bulan berjalan"],
+    const map = { dashboard:[`Dashboard - ${this.selectedSite}`,"Ringkasan status pemeriksaan bulan berjalan"],
       map:["Peta & Informasi","Peta lokasi, referensi bagian dan SOP penggunaan APAR/Hydrant"],
       report:["Riwayat & Laporan","Rekap seluruh hasil pemeriksaan"],
       findings:["Daftar Temuan", "Monitoring temuan Open dan Closed"],
@@ -1715,11 +1892,24 @@ this.expiredAparCount =
   },
 
   async render(){
+    console.log("SITE AKTIF : ", this.selectedSite);
     this.renderNav();
     const [title, sub] = this.titleFor(this.view);
     document.getElementById("topbar-title").textContent = title;
     document.getElementById("topbar-sub").textContent = sub;
     const periodPicker = document.querySelector(".period-picker");
+    const sitePicker = document.getElementById("picker-site");
+    if(sitePicker){
+    if(Auth.current.role === "checker"){
+    sitePicker.disabled = true;
+    sitePicker.style.opacity = "0.6";
+    sitePicker.style.cursor = "not-allowed";
+    }else{
+    sitePicker.disabled = false;
+    sitePicker.style.opacity = "1";
+    sitePicker.style.cursor = "pointer";
+    }
+    }
     if(periodPicker){periodPicker.style.display = this.view === "findings" ? "none" : "flex";}
     document.getElementById("sb-name").textContent = Auth.current.name;
     document.getElementById("sb-role").textContent = Auth.current.role;
@@ -1788,9 +1978,19 @@ if(token){
   await Store.init();
   document.getElementById("login-mode-label").textContent = Store.mode==="gas" ? "Online" : "Lokal (browser ini saja)";
   if(Auth.restore()){
+    if(
+  Auth.current &&
+  Auth.current.role === "checker"){
+  App.selectedSite =
+    String(
+      Auth.current.siteId ||
+      "CIBITUNG"
+    ).toUpperCase();
+}
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("active");
     await App.render();
+    App.buildSiteOptions();
     App.buildPeriodOptions();
     App.render();
   }
@@ -1803,9 +2003,25 @@ if(token){
 const Views = {
 
   dashboard(){
-    const { year, month } = App.period;
-    const points = App.points;
-    const total = points.length;
+const { year, month } = App.period;
+const activeMapIds =
+  App.siteMaps[
+    App.selectedSite
+  ]?.maps || [];
+const filteredMaps =
+  App.maps.filter(
+    m =>
+      activeMapIds.includes(
+        m.id
+      )
+  );
+const points =
+  App.points.filter(p =>
+    filteredMaps.some(
+      m => m.id === p.mapId
+    )
+  );
+const total = points.length;
     let done=0, danger=0;
     for(const p of points){
       const s = statusOf(p.id, App.records, year, month);
@@ -1864,7 +2080,7 @@ const Views = {
     </div>
     </div>`;
     }).join("");
-    const cards = App.maps.map(m=>{
+    const cards = filteredMaps.map(m=>{
       const mPoints = points.filter(p=>p.mapId===m.id);
 let cardClass = "";
 const hasWarning =
@@ -1925,7 +2141,18 @@ if(hasWarning){
     ${trendHtml}</div>`;
   },
   mapList(){
-    const cards = App.maps.map(m=>{
+const activeMapIds =
+  App.siteMaps[
+    App.selectedSite
+  ]?.maps || [];
+const filteredMaps =
+  App.maps.filter(
+    m =>
+      activeMapIds.includes(
+        m.id
+      )
+  );
+    const cards = filteredMaps.map(m=>{
       const thumbStyle = m.image ? `background-image:url('${m.image}')` : "";
       const cnt = App.points.filter(p=>p.mapId===m.id).length;
       return `
@@ -1935,6 +2162,16 @@ if(hasWarning){
       </div>`;
     }).join("");
     return `
+<div
+ style="
+ margin-bottom:15px;
+ font-size:14px;
+ font-weight:700;
+ color:#344054;
+ ">
+Site Aktif :
+ ${App.selectedSite}
+</div>
 <h3 class="info-section-title">Informasi Peta</h3>
 <div class="map-grid">${cards}</div>
 <hr>
@@ -2603,6 +2840,7 @@ const Admin = {
     const m = App.maps.find(x=>x.id===id);
     document.getElementById("modal-map-title").textContent = "Ubah "+m.name;
     document.getElementById("map-edit-id").value = m.id;
+    document.getElementById("map-edit-siteid").value = m.siteId || App.selectedSite;
     document.getElementById("map-edit-name").value = m.name;
     const prev = document.getElementById("map-edit-preview");
     if(m.image){ prev.src = m.image; prev.style.display="block"; } else { prev.style.display="none"; }
@@ -2619,13 +2857,29 @@ const Admin = {
   },
   async saveMap(){
     const id = document.getElementById("map-edit-id").value;
+    const siteId = document.getElementById("map-edit-siteid").value;
     const name = document.getElementById("map-edit-name").value.trim();
     if(!name){ toast("Nama lokasi wajib diisi", "error"); return; }
     let image = this._mapImageData;
     if(image && image.startsWith("data:") && Store.mode==="gas"){
       image = await Store.uploadImage(image);
     }
-    await Store.saveMap({ id, name, image });
+    console.log({
+id,
+siteId : App.selectedSite,
+name,
+image
+});
+await Store.saveMap({
+  id,
+  siteId : App.selectedSite,
+  name,
+  image,
+  order :
+    App.maps.find(
+      m => m.id === id
+    )?.order || 0
+});
     Modal.close("modal-map");
     toast("Peta tersimpan", "success");
     App.render();
@@ -2703,16 +2957,26 @@ const Admin = {
     if(!barcode){ this.autoBarcode(); barcode = document.getElementById("point-edit-barcode").value; }
     const dup = App.points.find(p=>p.barcode===barcode && p.id!==document.getElementById("point-edit-id").value);
     if(dup){ toast("Kode barcode sudah dipakai titik lain, gunakan kode unik", "error"); return; }
-    const point = {
-      id: document.getElementById("point-edit-id").value,
-      mapId,
-      type: this._pendingPointType || "APAR",
-      number, barcode,
-      jenis: document.getElementById("point-edit-jenis").value.trim(),
-      lokasi: document.getElementById("point-edit-lokasi").value.trim(),
-      x: parseFloat(document.getElementById("point-edit-x").value) || 50,
-      y: parseFloat(document.getElementById("point-edit-y").value) || 50,
-    };
+const point = {
+  id: document.getElementById("point-edit-id").value,
+  siteId: App.selectedSite,
+  mapId,
+  type: this._pendingPointType || "APAR",
+  number,
+  barcode,
+  jenis:
+    document.getElementById("point-edit-jenis").value.trim(),
+  lokasi:
+    document.getElementById("point-edit-lokasi").value.trim(),
+  x:
+    parseFloat(
+      document.getElementById("point-edit-x").value
+    ) || 50,
+  y:
+    parseFloat(
+      document.getElementById("point-edit-y").value
+    ) || 50,
+};
     await Store.savePoint(point);
     Modal.close("modal-point");
     toast("Titik tersimpan", "success");
@@ -3655,6 +3919,137 @@ if(progress < 50){
     💡 Rekomendasi:
 <br><br>
 ${recommendation}
+  `;
+},
+ask(){
+  const question =
+    document
+      .getElementById(
+        "ai-question"
+      )
+      .value
+      .toLowerCase()
+      .trim();
+  if(!question){
+    toast(
+      "Masukkan pertanyaan",
+      "error"
+    );
+    return;
+  }
+  if(question.includes("risiko")){
+    this.riskLocation();
+    return;
+  }
+  if(question.includes("temuan")){
+    this.topFindings();
+    return;
+  }
+  if(question.includes("expired")){
+    this.expiredAssets();
+    return;
+  }
+  if(question.includes("kadaluarsa")){
+
+    this.expiredAssets();
+    return;
+  }
+  if(
+  question.includes("progress")
+){
+  const total =
+    App.points.length;
+  const checked =
+    App.records.filter(
+      r =>
+        r.year == App.period.year &&
+        r.month == App.period.month
+    ).length;
+  const progress =
+    total
+      ? (
+          checked / total * 100
+        ).toFixed(1)
+      : 0;
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = `
+    🤖 Progress inspeksi saat ini adalah
+    <br><br>
+    <b>${progress}%</b>
+    <br><br>
+    (${checked} dari ${total} unit)
+  `;
+  return;
+}
+if(
+  question.includes("belum diperiksa") ||
+  question.includes("belum dicek")
+){
+  const total =
+    App.points.length;
+  const checked =
+    App.records.filter(
+      r =>
+        r.year == App.period.year &&
+        r.month == App.period.month
+    ).length;
+  const unchecked =
+    total - checked;
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = `
+    🤖 Saat ini terdapat
+    <br><br>
+    <b>${unchecked}</b>
+    unit yang belum diperiksa.
+  `;
+  return;
+}
+if(
+  question.includes("temuan open") ||
+  question.includes("open")
+){
+  const open =
+    App.findings.filter(
+      f =>
+        f.status === "OPEN"
+    ).length;
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = `
+    🤖 Saat ini terdapat
+    <br><br>
+    <b>${open}</b>
+    temuan OPEN.
+  `;
+  return;
+}
+  if(question.includes("ringkasan")){
+    this.summary();
+    return;
+  }
+  if(question.includes("laporan")){
+    this.executiveSummary();
+    return;
+  }
+  document.getElementById(
+    "ai-result"
+  ).innerHTML = `
+    🤖 Saya belum memahami
+    pertanyaan tersebut.
+    <br><br>
+    Coba tanyakan:
+    <br><br>
+    • lokasi paling berisiko
+    <br>
+    • top temuan
+    <br>
+    • asset expired
+    <br>
+    • ringkasan bulan ini
+    <br>
+    • buat laporan
   `;
 }
 };
