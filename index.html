@@ -199,6 +199,47 @@ text-align:center;
 
 /* ---------- Dashboard ---------- */
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.site-progress-row{
+  display:grid;
+  grid-template-columns:
+    repeat(4,1fr);
+  gap:14px;
+  margin-bottom:20px;
+}
+.site-progress-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:14px;
+}
+.site-progress-name{
+  font-size:12px;
+  color:#667085;
+  font-weight:700;
+  margin-bottom:8px;
+}
+.site-progress-value{
+  font-size:22px;
+  font-weight:800;
+}
+.site-progress-detail{
+  font-size:16px;
+  font-weight:600;
+  color:#667085;
+  margin-left:4px;
+}
+.site-progress-card.green
+.site-progress-value{
+  color:#12b76a;
+}
+.site-progress-card.orange
+.site-progress-value{
+  color:#f79009;
+}
+.site-progress-card.red
+.site-progress-value{
+  color:#e5484d;
+}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
 .stat-card .num{font-size:26px;font-weight:800;letter-spacing:-0.02em;}
 .stat-card .lbl{font-size:12.5px;color:var(--text-500);margin-top:2px;font-weight:600;}
@@ -536,6 +577,26 @@ color:#f5a524;
     font-size:18px;
     font-weight:700;
 }
+.area-badge{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  border-radius:999px;
+  background:
+    linear-gradient(
+      135deg,
+      #f5a524,
+      #d98c12
+    );
+  color:#241300;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.5px;
+  box-shadow:
+    0 4px 10px
+    rgba(245,165,36,.35);
+}
 </style>
 </head>
 <body>
@@ -634,18 +695,85 @@ color:#f5a524;
 
   <div class="main-col">
     <div class="topbar"><div class="topbar-left"><button id="mobile-menu-btn"onclick="MobileMenu.toggle()">☰</button>
-      <div>
-        <h2 id="topbar-title">Dashboard</h2>
+      <div><div style="display:flex; align-items:center; gap:12px;">
+        <h2 id="topbar-title">Dashboard</h2><div id="active-site-badge"></div></div>
         <div class="sub" id="topbar-sub">Ringkasan status pemeriksaan</div>
       </div>
       </div>
       <div class="flex items-center gap-12">
-        <div class="period-picker">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#667085" stroke-width="2" style="margin-left:6px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <select id="picker-site" onchange="App.onSiteChange()"></select>
-          <select id="picker-month" onchange="App.onPeriodChange()"></select>
-          <select id="picker-year" onchange="App.onYearChange()"></select>
-        </div>
+<div
+  style="
+    display:flex;
+    gap:10px;
+    align-items:center;
+  "
+>
+  <!-- SITE -->
+  <div class="period-picker">
+<svg
+  width="15"
+  height="15"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="#667085"
+  stroke-width="2"
+  style="margin-left:6px;"
+>
+  <path d="M12 21s-6-5.3-6-11a6 6 0 1 1 12 0c0 5.7-6 11-6 11z"/>
+  <circle cx="12" cy="10" r="2"/>
+</svg>
+    <select
+      id="picker-site"
+      onchange="App.onSiteChange()">
+    </select>
+  </div>
+  <!-- PERIODE -->
+  <div class="period-picker">
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#667085"
+      stroke-width="2"
+      style="margin-left:6px;"
+    >
+      <rect
+        x="3"
+        y="4"
+        width="18"
+        height="18"
+        rx="2"
+      />
+      <line
+        x1="16"
+        y1="2"
+        x2="16"
+        y2="6"
+      />
+      <line
+        x1="8"
+        y1="2"
+        x2="8"
+        y2="6"
+      />
+      <line
+        x1="3"
+        y1="10"
+        x2="21"
+        y2="10"
+      />
+    </svg>
+    <select
+      id="picker-month"
+      onchange="App.onPeriodChange()">
+    </select>
+    <select
+      id="picker-year"
+      onchange="App.onYearChange()">
+    </select>
+  </div>
+</div>
       </div>
     </div>
     <div class="content" id="view-root"></div>
@@ -877,6 +1005,23 @@ color:#f5a524;
             <option value="checker">Checker</option>
           </select>
         </div>
+      <div class="field">
+  <label>Area</label>
+  <select id="user-edit-site">
+    <option value="CIBITUNG">
+      Cibitung
+    </option>
+    <option value="SUNTER">
+      Sunter
+    </option>
+    <option value="KARAWANG">
+      Karawang
+    </option>
+    <option value="NGORO">
+      Ngoro
+    </option>
+  </select>
+</div>
       </div>
       <div class="field">
         <label>Password <span class="muted" id="pw-hint">(kosongkan jika tidak diubah)</span></label>
@@ -1626,6 +1771,7 @@ const App = {
   view: "dashboard",
   selectedSite : "CIBITUNG",
   sites : [
+  {id : "ALL", name : "All Area"},
   {id : "CIBITUNG", name : "Cibitung"},
   {id : "SUNTER", name : "Sunter"},
   {id : "KARAWANG", name: "Karawang"},
@@ -1723,22 +1869,27 @@ siteData : {
   async loadAll(){
     [this.maps, this.points, this.records, this.findings] = await Promise.all([Store.getMaps(), Store.getPoints(), Store.getRecords(), Store.getFindings()]);
 console.table(this.maps);
-this.maps =
-  this.maps.filter(
-    m =>
-      String(m.siteId)
-        .toUpperCase()
-      ===
-      this.selectedSite
-  );
-this.points =
-  this.points.filter(
-    p =>
-      String(p.siteId)
-        .toUpperCase()
-      ===
-      this.selectedSite
-  );
+if(this.selectedSite !== "ALL"){
+
+  this.maps =
+    this.maps.filter(
+      m =>
+        String(m.siteId)
+          .toUpperCase()
+        ===
+        this.selectedSite
+    );
+
+  this.points =
+    this.points.filter(
+      p =>
+        String(p.siteId)
+          .toUpperCase()
+        ===
+        this.selectedSite
+    );
+
+}
 /*const siteData =
   this.siteData[
     this.selectedSite
@@ -1793,15 +1944,22 @@ async onSiteChange(){
     App.selectedSite;
     return;
   }
-  this.selectedSite =
-    document.getElementById(
-      "picker-site"
-    ).value;
-  console.log(
-    "SITE BERUBAH : ",
-    this.selectedSite
+  Loading.show(
+    "Memuat Data Area..."
   );
-  await this.render();
+  try{
+    this.selectedSite =
+      document.getElementById(
+        "picker-site"
+      ).value;
+    console.log(
+      "SITE BERUBAH : ",
+      this.selectedSite
+    );
+    await this.render();
+  }finally{
+    Loading.hide();
+  }
 },
   buildPeriodOptions(){
     const yearSel = document.getElementById("picker-year");
@@ -1850,7 +2008,17 @@ async onSiteChange(){
   renderNav(){
     const role = Auth.current.role;
     const items = NAV_ITEMS.filter(n=>n.roles.includes(role));
-    const openFindingCount = this.findings.filter(f => f.status === "OPEN").length;
+    const openFindingCount =
+  this.findings.filter(f=>{
+    if(f.status !== "OPEN"){
+      return false;
+    }
+    const point =
+      this.points.find(
+        p => p.id === f.pointId
+      );
+    return !!point;
+  }).length;
     const expiredAparCount = this.expiredAparCount;
     let html = "", lastSection = null;
     for(const item of items){
@@ -1879,7 +2047,7 @@ async onSiteChange(){
   },
 
   titleFor(viewId){
-    const map = { dashboard:[`Dashboard - ${this.selectedSite}`,"Ringkasan status pemeriksaan bulan berjalan"],
+    const map = { dashboard:["Dashboard", "Ringkasan status pemeriksaan bulan berjalan"],
       map:["Peta & Informasi","Peta lokasi, referensi bagian dan SOP penggunaan APAR/Hydrant"],
       report:["Riwayat & Laporan","Rekap seluruh hasil pemeriksaan"],
       findings:["Daftar Temuan", "Monitoring temuan Open dan Closed"],
@@ -1893,9 +2061,19 @@ async onSiteChange(){
 
   async render(){
     console.log("SITE AKTIF : ", this.selectedSite);
-    this.renderNav();
     const [title, sub] = this.titleFor(this.view);
     document.getElementById("topbar-title").textContent = title;
+    const badge =
+  document.getElementById(
+    "active-site-badge"
+  );
+if(badge){
+  badge.innerHTML = `
+    <span class="area-badge">
+      📍 ${this.selectedSite}
+    </span>
+  `;
+}
     document.getElementById("topbar-sub").textContent = sub;
     const periodPicker = document.querySelector(".period-picker");
     const sitePicker = document.getElementById("picker-site");
@@ -1910,12 +2088,35 @@ async onSiteChange(){
     sitePicker.style.cursor = "pointer";
     }
     }
-    if(periodPicker){periodPicker.style.display = this.view === "findings" ? "none" : "flex";}
+    if(periodPicker){
+  if(this.view === "findings"){
+    document.getElementById(
+      "picker-month"
+    ).style.display = "none";
+    document.getElementById(
+      "picker-year"
+    ).style.display = "none";
+    document.getElementById(
+      "picker-site"
+    ).style.display = "block";
+  }else{
+    document.getElementById(
+      "picker-month"
+    ).style.display = "block";
+    document.getElementById(
+      "picker-year"
+    ).style.display = "block";
+    document.getElementById(
+      "picker-site"
+    ).style.display = "block";
+  }
+}
     document.getElementById("sb-name").textContent = Auth.current.name;
     document.getElementById("sb-role").textContent = Auth.current.role;
     document.getElementById("sb-avatar").textContent = Auth.current.name.charAt(0).toUpperCase();
 
     await this.loadAll();
+    this.renderNav();
     const root = document.getElementById("view-root");
     if(this.view==="dashboard") root.innerHTML = Views.dashboard();
     else if(this.view==="map") root.innerHTML = Views.mapList();
@@ -2004,10 +2205,20 @@ const Views = {
 
   dashboard(){
 const { year, month } = App.period;
-const activeMapIds =
-  App.siteMaps[
-    App.selectedSite
-  ]?.maps || [];
+let activeMapIds = [];
+if(
+  App.selectedSite === "ALL"
+){
+  activeMapIds =
+    App.maps.map(
+      m => m.id
+    );
+}else{
+  activeMapIds =
+    App.siteMaps[
+      App.selectedSite
+    ]?.maps || [];
+}
 const filteredMaps =
   App.maps.filter(
     m =>
@@ -2021,6 +2232,10 @@ const points =
       m => m.id === p.mapId
     )
   );
+const activePointIds =
+  points.map(
+    p => p.id
+  );
 const total = points.length;
     let done=0, danger=0;
     for(const p of points){
@@ -2032,7 +2247,7 @@ const total = points.length;
     const pct = total ? Math.round((done/total)*100) : 0;
     const findingItems = {};
     const findingLocations = {};
-    App.records.filter(r => r.year === year && r.month === month).forEach(rec => {
+    App.records.filter(r => r.year === year && r.month === month && activePointIds.includes(r.pointId)).forEach(rec => {
     (rec.items || []).forEach(item => {
     if(item.status === "R" || item.status === "T.A"){
     findingItems[item.name] = (findingItems[item.name] || 0) + 1;
@@ -2059,7 +2274,7 @@ const total = points.length;
         const monthlyFindings = [];
     for(let m=1; m<=12; m++){
     let totalFinding = 0;
-    App.records.filter(r => r.year === year && r.month === m).forEach(rec => {
+    App.records.filter(r => r.year === year && r.month === m && activePointIds.includes(r.pointId)).forEach(rec => {
     totalFinding += (rec.items || []).filter(i => i.status === "R" || i.status === "T.A").length;
     });
     monthlyFindings.push({month:m, count:totalFinding});
@@ -2080,6 +2295,87 @@ const total = points.length;
     </div>
     </div>`;
     }).join("");
+    let siteProgressHtml = "";
+if(
+  App.selectedSite === "ALL"
+){
+  const sites =
+  [
+    "CIBITUNG",
+    "SUNTER",
+    "KARAWANG",
+    "NGORO"
+  ];
+  siteProgressHtml =
+  `
+  <div class="site-progress-row">
+  `;
+  sites.forEach(site=>{
+    const sitePoints =
+      App.points.filter(
+        p =>
+          String(
+            p.siteId
+          ).toUpperCase()
+          === site
+      );
+    const totalSite =
+      sitePoints.length;
+    let checkedSite = 0;
+    sitePoints.forEach(p=>{
+      const rec =
+        App.records.find(
+          r=>
+            r.pointId===p.id
+            &&
+            r.year===year
+            &&
+            r.month===month
+        );
+      if(rec){
+        checkedSite++;
+      }
+    });
+    const pctSite =
+      totalSite
+      ? Math.round(
+          checkedSite /
+          totalSite *
+          100
+        )
+      : 0;
+    let colorClass =
+      "red";
+    if(
+      pctSite >= 90
+    ){
+      colorClass =
+        "green";
+    }
+    else if(
+      pctSite >= 50
+    ){
+      colorClass =
+        "orange";
+    }
+siteProgressHtml +=
+`
+<div class="site-progress-card ${colorClass}">
+  <div class="site-progress-name">
+    ${site}
+  </div>
+  <div class="site-progress-value">
+    ${pctSite}%
+    <span class="site-progress-detail">
+      (${checkedSite}/${totalSite})
+    </span>
+  </div>
+</div>
+`;
+  });
+  siteProgressHtml +=
+    "</div>";
+}
     const cards = filteredMaps.map(m=>{
       const mPoints = points.filter(p=>p.mapId===m.id);
 let cardClass = "";
@@ -2119,7 +2415,7 @@ if(hasWarning){
       <div class="stat-card green"><div class="num">${done}</div><div class="lbl">Sudah Dicek — ${MONTH_NAMES[month]} ${year}</div></div>
       <div class="stat-card red"><div class="num">${belum}</div><div class="lbl">Belum Dicek</div></div>
       <div class="stat-card orange"><div class="num">${danger}</div><div class="lbl">Perlu Perhatian </div></div>
-    </div>
+    </div>${siteProgressHtml}
     <div class="flex justify-between items-center" style="margin-bottom:12px;">
       <h3 style="margin:0;font-size:15.5px;">Progres per Lokasi</h3>
       <span class="mono muted" style="font-size:12px;">${pct}% keseluruhan</span>
@@ -2141,10 +2437,20 @@ if(hasWarning){
     ${trendHtml}</div>`;
   },
   mapList(){
-const activeMapIds =
-  App.siteMaps[
-    App.selectedSite
-  ]?.maps || [];
+let activeMapIds = [];
+if(
+  App.selectedSite === "ALL"
+){
+  activeMapIds =
+    App.maps.map(
+      m => m.id
+    );
+}else{
+  activeMapIds =
+    App.siteMaps[
+      App.selectedSite
+    ]?.maps || [];
+}
 const filteredMaps =
   App.maps.filter(
     m =>
@@ -2318,13 +2624,42 @@ ${Views.aparInformationTable()}
     </div>`;
   },
   findings(){
-  const openCount = App.findings.filter(x => x.status === "OPEN").length;
-  const closedCount = App.findings.filter(x => x.status === "CLOSED").length;
-  const totalCount = App.findings.length;
-  const rows = App.findings.filter(f=>{
-  if(Finding.currentFilter === "ALL"){return true;
-  }return (f.status === Finding.currentFilter);
-  }).sort((a,b)=>{
+const siteFindings =
+  App.findings.filter(f=>{
+    const point =
+      App.points.find(
+        p => p.id === f.pointId
+      );
+    return !!point;
+  });
+const openCount =
+  siteFindings.filter(
+    x => x.status === "OPEN"
+  ).length;
+const closedCount =
+  siteFindings.filter(
+    x => x.status === "CLOSED"
+  ).length;
+const totalCount =
+  siteFindings.length;
+const rows = App.findings.filter(f=>{
+  const point =
+    App.points.find(
+      p => p.id === f.pointId
+    );
+  if(!point){
+    return false;
+  }
+  if(
+    Finding.currentFilter === "ALL"
+  ){
+    return true;
+  }
+  return (
+    f.status ===
+    Finding.currentFilter
+  );
+}).sort((a,b)=>{
   if(a.status==="OPEN" && b.status==="CLOSED"){return -1;}
   if(a.status==="CLOSED" && b.status==="OPEN"){return 1;}return 0;}).map(f=>{
   const statusBadge = f.status==="OPEN" ? '<span class="badge orange">Open</span>' : '<span class="badge green">Closed</span>';
@@ -2438,6 +2773,7 @@ ${Views.aparInformationTable()}
       <tr>
         <td><b>${escapeHtml(u.name)}</b></td>
         <td>${escapeHtml(u.email || "-")}</td>
+        <td><span class="badge gray">${escapeHtml(u.siteId || "-")}</span></td>
         <td class="mono">${escapeHtml(u.username)}</td>
         <td><span class="badge ${u.role==='admin'?'orange':'gray'}">${u.role}</span></td>
         <td style="text-align:right;"><button class="icon-btn" onclick="Admin.editUser('${u.id}')">✎</button></td>
@@ -2448,7 +2784,7 @@ ${Views.aparInformationTable()}
         <div><h3>Pengguna Sistem</h3><p>Anda (admin), Vendor 1, dan Vendor 2 dapat login dan mengisi checklist. Hanya admin yang bisa mengubah pengaturan.</p></div>
         <button class="btn btn-primary btn-sm" onclick="Admin.newUser()">+ Tambah Pengguna</button>
       </div>
-      <table><thead><tr><th>Nama</th><th>Email</th><th>Username</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <table><thead><tr><th>Nama</th><th>Email</th><th>Area</th><th>Username</th><th>Role</th><th></th></tr></thead><tbody>${rows}</tbody></table>
     </div>`;
   },
 aparInformationTable(){
@@ -3031,6 +3367,7 @@ const point = {
     document.getElementById("user-edit-email").value = "";
     document.getElementById("user-edit-username").value = "";
     document.getElementById("user-edit-role").value = "vendor1";
+    document.getElementById("user-edit-site").value = App.selectedSite;
     document.getElementById("user-edit-password").value = "";
     document.getElementById("pw-hint").textContent = "";
     document.getElementById("btn-delete-user").classList.add("hidden");
@@ -3044,6 +3381,7 @@ const point = {
     document.getElementById("user-edit-email").value = u.email || "";
     document.getElementById("user-edit-username").value = u.username;
     document.getElementById("user-edit-role").value = u.role;
+    document.getElementById("user-edit-site").value = u.siteId || "CIBITUNG";
     document.getElementById("user-edit-password").value = "";
     document.getElementById("pw-hint").textContent = "(kosongkan jika tidak diubah)";
     document.getElementById("btn-delete-user").classList.toggle("hidden", u.id==="u_admin");
@@ -3054,13 +3392,14 @@ const point = {
     const email =document.getElementById("user-edit-email").value.trim();
     const username = document.getElementById("user-edit-username").value.trim();
     const role = document.getElementById("user-edit-role").value;
+    const siteId =document.getElementById("user-edit-site").value;
     const password = document.getElementById("user-edit-password").value;
     if(!name || !username){ toast("Nama & username wajib diisi", "error"); return; }
     const id = document.getElementById("user-edit-id").value;
     const dup = App.users.find(u=>u.username===username && u.id!==id);
     if(dup){ toast("Username sudah dipakai", "error"); return; }
     if(!id && !password){ toast("Password wajib diisi untuk pengguna baru", "error"); return; }
-    await Store.saveUser({ id, name, username, role, email, password });
+    await Store.saveUser({ id, name, username, role, siteId, email, password });
     Modal.close("modal-user");
     toast("Pengguna tersimpan", "success");
     App.render();
