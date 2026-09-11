@@ -1007,20 +1007,7 @@ color:#f5a524;
         </div>
       <div class="field">
   <label>Area</label>
-  <select id="user-edit-site">
-    <option value="CIBITUNG">
-      Cibitung
-    </option>
-    <option value="SUNTER">
-      Sunter
-    </option>
-    <option value="KARAWANG">
-      Karawang
-    </option>
-    <option value="NGORO">
-      Ngoro
-    </option>
-  </select>
+<select id="user-edit-site"></select>
 </div>
       </div>
       <div class="field">
@@ -1303,7 +1290,8 @@ const Store = {
     if(!json.ok) throw new Error(json.error || "Gagal menghubungi server data");
     return json.data;
   },
-
+  async getSites(){return await this._gas("getSites",{});
+  },
   // ---------- USERS ----------
   async getUsers(){
     if(this.mode==="local") return this._db.users;
@@ -1770,95 +1758,7 @@ const NAV_ITEMS = [
 const App = {
   view: "dashboard",
   selectedSite : "CIBITUNG",
-  sites : [
-  {id : "ALL", name : "All Area"},
-  {id : "CIBITUNG", name : "Cibitung"},
-  {id : "SUNTER", name : "Sunter"},
-  {id : "KARAWANG", name: "Karawang"},
-  {id : "NGORO", name: "Ngoro"}
-],
-siteMaps : {
- CIBITUNG : {
-   code : "CIB",
-   name : "Cibitung",
-   maps : [
-     "map_ob1",
-     "map_ob2",
-     "map_pio",
-     "map_yard"
-   ]
- },
-SUNTER : {
-   code : "SUN",
-   name : "Sunter",
-   maps : [
-      "sun_office_delivery",
-      "sun_pio",
-      "sun_yard_atas",
-      "sun_yard_bawah"
-   ]
-},
- KARAWANG : {
-   code : "KRW",
-   name : "Karawang",
-   maps : []
- },
- NGORO : {
-   code : "NGR",
-   name : "Ngoro",
-   maps : []
- }
-},
-siteData : {
-  SUNTER : {
-    maps : [
-      {
-        id:"sun_office_delivery",
-        name:"OFFICE & DELIVERY",
-        image:""
-      },
-      {
-        id:"sun_pio",
-        name:"PIO BUILDING",
-        image:""
-      },
-      {
-        id:"sun_yard_atas",
-        name:"YARD ATAS",
-        image:""
-      },
-      {
-        id:"sun_yard_bawah",
-        name:"YARD BAWAH",
-        image:""
-      }
-    ],
-    points : [
-      {
-        id:"sun_apar_001",
-        mapId:"sun_office_delivery",
-        type:"APAR",
-        number:"001",
-        barcode:"SUN-APAR-001",
-        jenis:"APAR 6KG",
-        lokasi:"OFFICE & DELIVERY",
-        x:50,
-        y:50
-      },
-      {
-        id:"sun_hyd_001",
-        mapId:"sun_pio",
-        type:"HYDRANT_INDOOR",
-        number:"001",
-        barcode:"SUN-HYIN-001",
-        jenis:"HYDRANT",
-        lokasi:"PIO BUILDING",
-        x:50,
-        y:50
-      }
-    ]
-  }
-},
+  sites : [],
   period: { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
   maps: [], points: [], records: [], findings: [], users: [],
   activeMapId: null,
@@ -1867,29 +1767,8 @@ siteData : {
   aparTablePageSize: 10,
 
   async loadAll(){
-    [this.maps, this.points, this.records, this.findings] = await Promise.all([Store.getMaps(), Store.getPoints(), Store.getRecords(), Store.getFindings()]);
+    [this.sites, this.maps, this.points, this.records, this.findings] = await Promise.all([Store.getSites(), Store.getMaps(), Store.getPoints(), Store.getRecords(), Store.getFindings()]);
 console.table(this.maps);
-if(this.selectedSite !== "ALL"){
-
-  this.maps =
-    this.maps.filter(
-      m =>
-        String(m.siteId)
-          .toUpperCase()
-        ===
-        this.selectedSite
-    );
-
-  this.points =
-    this.points.filter(
-      p =>
-        String(p.siteId)
-          .toUpperCase()
-        ===
-        this.selectedSite
-    );
-
-}
 /*const siteData =
   this.siteData[
     this.selectedSite
@@ -1922,13 +1801,27 @@ buildSiteOptions(){
       "picker-site"
     );
   if(!sel) return;
+  const sites = [
+    {
+      id : "ALL",
+      name : "All Area"
+    },
+    ...this.sites
+      .filter(
+        s =>
+          String(s.active)
+            .toUpperCase() !== "FALSE"
+      )
+  ];
   sel.innerHTML =
-    this.sites.map(site => `
+    sites.map(site => `
       <option
         value="${site.id}"
-        ${site.id===this.selectedSite
+        ${
+          site.id === this.selectedSite
           ? "selected"
-          : ""}
+          : ""
+        }
       >
         ${site.name}
       </option>
@@ -2068,11 +1961,20 @@ async onSiteChange(){
     "active-site-badge"
   );
 if(badge){
-  badge.innerHTML = `
-    <span class="area-badge">
-      📍 ${this.selectedSite}
-    </span>
-  `;
+const siteObj =
+  this.sites.find(
+    s =>
+      s.id === this.selectedSite
+  );
+const siteName =
+  siteObj
+    ? siteObj.name
+    : this.selectedSite;
+badge.innerHTML = `
+  <span class="area-badge">
+    📍 ${siteName}
+  </span>
+`;
 }
     document.getElementById("topbar-sub").textContent = sub;
     const periodPicker = document.querySelector(".period-picker");
@@ -2205,27 +2107,16 @@ const Views = {
 
   dashboard(){
 const { year, month } = App.period;
-let activeMapIds = [];
-if(
-  App.selectedSite === "ALL"
-){
-  activeMapIds =
-    App.maps.map(
-      m => m.id
-    );
-}else{
-  activeMapIds =
-    App.siteMaps[
-      App.selectedSite
-    ]?.maps || [];
-}
 const filteredMaps =
-  App.maps.filter(
-    m =>
-      activeMapIds.includes(
-        m.id
-      )
-  );
+  App.selectedSite === "ALL"
+  ? App.maps
+  : App.maps.filter(
+      m =>
+        String(m.siteId)
+          .toUpperCase()
+        ===
+        App.selectedSite
+    );
 const points =
   App.points.filter(p =>
     filteredMaps.some(
@@ -2299,18 +2190,16 @@ const total = points.length;
 if(
   App.selectedSite === "ALL"
 ){
-  const sites =
-  [
-    "CIBITUNG",
-    "SUNTER",
-    "KARAWANG",
-    "NGORO"
-  ];
+const sites =
+  App.sites.map(
+    s => String(s.id)
+          .toUpperCase()
+  );
   siteProgressHtml =
   `
   <div class="site-progress-row">
   `;
-  sites.forEach(site=>{
+  sites.forEach(site => {
     const sitePoints =
       App.points.filter(
         p =>
@@ -2362,7 +2251,7 @@ siteProgressHtml +=
 `
 <div class="site-progress-card ${colorClass}">
   <div class="site-progress-name">
-    ${site}
+    ${App.sites.find(s =>String(s.id).toUpperCase()=== site)?.name || site}
   </div>
   <div class="site-progress-value">
     ${pctSite}%
@@ -2437,27 +2326,16 @@ if(hasWarning){
     ${trendHtml}</div>`;
   },
   mapList(){
-let activeMapIds = [];
-if(
-  App.selectedSite === "ALL"
-){
-  activeMapIds =
-    App.maps.map(
-      m => m.id
-    );
-}else{
-  activeMapIds =
-    App.siteMaps[
-      App.selectedSite
-    ]?.maps || [];
-}
 const filteredMaps =
-  App.maps.filter(
-    m =>
-      activeMapIds.includes(
-        m.id
-      )
-  );
+  App.selectedSite === "ALL"
+  ? App.maps
+  : App.maps.filter(
+      m =>
+        String(m.siteId)
+          .toUpperCase()
+        ===
+        App.selectedSite
+    );
     const cards = filteredMaps.map(m=>{
       const thumbStyle = m.image ? `background-image:url('${m.image}')` : "";
       const cnt = App.points.filter(p=>p.mapId===m.id).length;
@@ -2718,8 +2596,17 @@ const rows = App.findings.filter(f=>{
         <button class="btn btn-ghost btn-sm" onclick="Admin.editMap('${m.id}')">Ubah Denah / Nama</button>
         <button class="btn btn-dark btn-sm" onclick="App.openMap('${m.id}')">Lihat Peta</button>
       </div>`).join("");
-    return `<p class="help-text" style="margin-bottom:14px;">4 lokasi peta sudah disiapkan sesuai area Anda. Upload gambar denah (foto/scan layout) untuk masing-masing, lalu atur titik di menu <b>Kelola Titik</b>.</p>${rows}`;
-  },
+    return `
+<div class="card">
+  <div class="card-head">
+    <div>
+      <h3>Kelola Peta</h3>
+      <p>
+        Kelola seluruh denah area.
+      </p>
+    </div>
+    <button class="btn btn-primary btn-sm"onclick="Admin.newMap()">+ Tambah Peta</button></div></div>${rows}`;
+},
 
   adminPoints(){
     const mapName = id => App.maps.find(m=>m.id===id)?.name || "-";
@@ -3163,7 +3050,43 @@ const MapViewer = {
 const Admin = {
   _mapImageData: null,
   _pendingPointType: null,
-
+  newMap(){
+  document.getElementById(
+    "modal-map-title"
+  ).textContent =
+    "Tambah Peta Baru";
+  document.getElementById(
+    "map-edit-id"
+  ).value = "";
+  document.getElementById(
+    "map-edit-siteid"
+  ).value =
+    App.selectedSite;
+  document.getElementById(
+    "map-edit-name"
+  ).value = "";
+  document.getElementById(
+    "map-edit-preview"
+  ).style.display = "none";
+  this._mapImageData = "";
+  Modal.open(
+    "modal-map"
+  );
+},
+  fillSiteSelect(){
+  const sel =
+    document.getElementById(
+      "user-edit-site"
+    );
+  if(!sel) return;
+  sel.innerHTML =
+    App.sites.map(site => `
+      <option
+        value="${site.id}">
+        ${site.name}
+      </option>
+    `).join("");
+},
   togglePlaceMode(){
     MapViewer.placing = !MapViewer.placing;
     document.getElementById("map-place-hint").classList.toggle("hidden", !MapViewer.placing);
@@ -3208,13 +3131,10 @@ image
 });
 await Store.saveMap({
   id,
-  siteId : App.selectedSite,
+  siteId,
   name,
   image,
-  order :
-    App.maps.find(
-      m => m.id === id
-    )?.order || 0
+  order : id ? (App.maps.find(m => m.id === id)?.order || 0):(App.maps.length + 1)
 });
     Modal.close("modal-map");
     toast("Peta tersimpan", "success");
@@ -3371,9 +3291,11 @@ const point = {
     document.getElementById("user-edit-password").value = "";
     document.getElementById("pw-hint").textContent = "";
     document.getElementById("btn-delete-user").classList.add("hidden");
+    this.fillSiteSelect();
     Modal.open("modal-user");
   },
   editUser(id){
+    this.fillSiteSelect();
     const u = App.users.find(x=>x.id===id);
     document.getElementById("modal-user-title").textContent = "Ubah Pengguna";
     document.getElementById("user-edit-id").value = u.id;
