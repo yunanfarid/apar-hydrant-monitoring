@@ -1845,6 +1845,7 @@ async onSiteChange(){
       document.getElementById(
         "picker-site"
       ).value;
+    this.aparTablePage = 1;
     console.log(
       "SITE BERUBAH : ",
       this.selectedSite
@@ -2675,10 +2676,22 @@ const rows = App.findings.filter(f=>{
     </div>`;
   },
 aparInformationTable(){
-  const apars =
-    App.points.filter(
-      p => p.type === "APAR"
+const apars =
+  App.points.filter(p => {
+    if(p.type !== "APAR"){
+      return false;
+    }
+    if(App.selectedSite === "ALL"){
+      return true;
+    }
+    return (
+      String(p.siteId || "")
+        .toUpperCase()
+      ===
+      String(App.selectedSite || "")
+        .toUpperCase()
     );
+  });
   const pageSize =
     App.aparTablePageSize;
   const currentPage =
