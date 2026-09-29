@@ -2504,12 +2504,24 @@ ${Views.aparInformationTable()}
   },
   findings(){
 const siteFindings =
-  App.findings.filter(f=>{
+  App.findings.filter(f => {
     const point =
       App.points.find(
         p => p.id === f.pointId
       );
-    return !!point;
+    if(!point){
+      return false;
+    }
+    if(App.selectedSite === "ALL"){
+      return true;
+    }
+    return (
+      String(point.siteId || "")
+        .toUpperCase()
+      ===
+      String(App.selectedSite || "")
+        .toUpperCase()
+    );
   });
 const openCount =
   siteFindings.filter(
@@ -2521,7 +2533,7 @@ const closedCount =
   ).length;
 const totalCount =
   siteFindings.length;
-const rows = App.findings.filter(f=>{
+const rows = siteFindings.filter(f=>{
   const point =
     App.points.find(
       p => p.id === f.pointId
@@ -2575,7 +2587,7 @@ const rows = App.findings.filter(f=>{
     <div style="margin-bottom:15px;display:flex;gap:10px;">
     <button class="btn btn-sm"onclick="Finding.filter('ALL')">Semua</button>
     <button class="btn btn-sm" style="background:#f79009;color:white;"onclick="Finding.filter('OPEN')">Open</button>
-    <button class="btn btn- sm btn-success"onclick="Finding.filter('Closed')">Closed</button></div>
+    <button class="btn btn-sm btn-success"onclick="Finding.filter('CLOSED')">Closed</button></div>
     <div id="findings-table-container">
     <table>
     <thead>
