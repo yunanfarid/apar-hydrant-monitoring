@@ -2502,102 +2502,294 @@ ${Views.aparInformationTable()}
       <div id="report-table-wrap"></div>
     </div>`;
   },
-  findings(){
-const siteFindings =
-  App.findings.filter(f => {
-    const point =
-      App.points.find(
-        p => p.id === f.pointId
-      );
+findings(){
+  // =====================================================
+  // FILTER FINDING BERDASARKAN AREA AKTIF
+  // =====================================================
+  const siteFindings = App.findings.filter(f => {
+    // Cari point milik finding
+    const point = App.points.find(
+      p => String(p.id).trim() === String(f.pointId).trim()
+    );
+    // Kalau point tidak ditemukan, finding tidak ditampilkan
     if(!point){
       return false;
     }
-    if(App.selectedSite === "ALL"){
+    // Jika admin memilih All Area
+    if(
+      String(App.selectedSite)
+        .trim()
+        .toUpperCase() === "ALL"
+    ){
       return true;
     }
-    return (
+    // Ambil site dari Point
+    const pointSite =
       String(point.siteId || "")
-        .toUpperCase()
-      ===
+        .trim()
+        .toUpperCase();
+
+    const selectedSite =
       String(App.selectedSite || "")
-        .toUpperCase()
-    );
+        .trim()
+        .toUpperCase();
+    return pointSite === selectedSite;
   });
-const openCount =
-  siteFindings.filter(
-    x => x.status === "OPEN"
-  ).length;
-const closedCount =
-  siteFindings.filter(
-    x => x.status === "CLOSED"
-  ).length;
-const totalCount =
-  siteFindings.length;
-const rows = siteFindings.filter(f=>{
-  const point =
-    App.points.find(
-      p => p.id === f.pointId
-    );
-  if(!point){
-    return false;
-  }
-  if(
-    Finding.currentFilter === "ALL"
-  ){
-    return true;
-  }
-  return (
-    f.status ===
-    Finding.currentFilter
-  );
-}).sort((a,b)=>{
-  if(a.status==="OPEN" && b.status==="CLOSED"){return -1;}
-  if(a.status==="CLOSED" && b.status==="OPEN"){return 1;}return 0;}).map(f=>{
-  const statusBadge = f.status==="OPEN" ? '<span class="badge orange">Open</span>' : '<span class="badge green">Closed</span>';
+  // =====================================================
+  // HITUNG OPEN / CLOSED / TOTAL
+  // =====================================================
+  const openCount =
+    siteFindings.filter(f =>
+      String(f.status || "")
+        .trim()
+        .toUpperCase() === "OPEN"
+    ).length;
+  const closedCount =
+    siteFindings.filter(f =>
+      String(f.status || "")
+        .trim()
+        .toUpperCase() === "CLOSED"
+    ).length;
+  const totalCount =
+    siteFindings.length;
+  // =====================================================
+  // FILTER STATUS TABEL
+  // =====================================================
+  const rows =
+    siteFindings
+    .filter(f => {
+      if(
+        String(Finding.currentFilter)
+          .trim()
+          .toUpperCase() === "ALL"
+      ){
+        return true;
+      }
+      const findingStatus =
+        String(f.status || "")
+          .trim()
+          .toUpperCase();
+      const activeFilter =
+        String(Finding.currentFilter || "")
+          .trim()
+          .toUpperCase();
+      return findingStatus === activeFilter;
+    })
+    .sort((a,b) => {
+      const statusA =
+        String(a.status || "")
+          .trim()
+          .toUpperCase();
+      const statusB =
+        String(b.status || "")
+          .trim()
+          .toUpperCase();
+      if(
+        statusA === "OPEN" &&
+        statusB === "CLOSED"
+      ){
+        return -1;
+      }
+      if(
+        statusA === "CLOSED" &&
+        statusB === "OPEN"
+      ){
+        return 1;
+      }
+      return 0;
+    })
+    .map(f => {
+      const normalizedStatus =
+        String(f.status || "")
+          .trim()
+          .toUpperCase();
+      const statusBadge =
+        normalizedStatus === "OPEN"
+        ? '<span class="badge orange">Open</span>'
+        : '<span class="badge green">Closed</span>';
+      return `
+        <tr>
+          <td>
+            ${escapeHtml(f.barcode || "-")}
+          </td>
+          <td>
+            ${escapeHtml(f.itemName || "-")}
+          </td>
+          <td>
+            ${escapeHtml(f.findingType || "-")}
+          </td>
+          <td>
+            ${statusBadge}
+          </td>
+          <td>
+            ${
+              f.openDate
+              ? new Date(
+                  f.openDate
+                ).toLocaleDateString("id-ID")
+              : "-"
+            }
+          </td>
+          <td>
+            ${escapeHtml(f.closedBy || "-")}
+          </td>
+          <td>
+            ${
+              f.closeDate
+              ? new Date(
+                  f.closeDate
+                ).toLocaleDateString("id-ID")
+              : "-"
+            }
+          </td>
+          <td>
+            ${
+              f.closePhoto
+              ? `
+                <img
+                  src="${f.closePhoto}"
+                  onclick="Finding.previewPhoto('${f.closePhoto}')"
+                  style="
+                    width:60px;
+                    height:60px;
+                    object-fit:cover;
+                    border-radius:8px;
+                    cursor:pointer;
+                    border:1px solid #ddd;
+                  "
+                >
+              `
+              : "-"
+            }
+          </td>
+          <td>
+            ${
+              normalizedStatus === "OPEN"
+              ? `
+                <button
+                  class="btn btn-success btn-sm"
+                  onclick="Finding.close('${f.id}')">
+                  Tutup
+                </button>
+              `
+              : "-"
+            }
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+  // =====================================================
+  // HTML VIEW
+  // =====================================================
   return `
-  <tr><td>${f.barcode}</td>
-  <td>${f.itemName}</td>
-  <td>${f.findingType}</td>
-  <td>${statusBadge}</td>
-  <td>${f.openDate ? new Date(f.openDate).toLocaleDateString("id-ID"): "-"}</td>
-  <td>${f.closedBy || "-"}</td>
-  <td>${f.closeDate ? new Date(f.closeDate).toLocaleDateString("id-ID"): "-"}</td>
-  <td>${f.closePhoto?`<img src="${f.closePhoto}"onclick="Finding.previewPhoto('${f.closePhoto}')"style="width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #ddd;">`:"-"}</td>
-  <td>${f.status==="OPEN" ? `
-  <button class="btn btn-success btn-sm" onclick="Finding.close('${f.id}')">Tutup</button>`: "-"}</td>
-  </tr>`;}).join("");
-  return `
-  <div class="stat-row">
-  <div class="stat-card orange">
-  <div class="num">${openCount}</div>
-  <div class="lbl">Open</div>
-  </div>
-  <div class="stat-card green">
-  <div class="num">${closedCount}</div>
-  <div class="lbl">Closed</div>
-  </div>
-  <div class="stat-card">
-  <div class="num">${totalCount}</div>
-  <div class="lbl">Total</div>
-  </div>
-  </div>
-  <div class="card">
-    <div class="card-head">
-    <div><h3>Daftar Temuan</h3><p>Monitoring status temuan inspeksi</p></div></div>
-    <div style="margin-bottom:15px;display:flex;gap:10px;">
-    <button class="btn btn-sm"onclick="Finding.filter('ALL')">Semua</button>
-    <button class="btn btn-sm" style="background:#f79009;color:white;"onclick="Finding.filter('OPEN')">Open</button>
-    <button class="btn btn-sm btn-success"onclick="Finding.filter('CLOSED')">Closed</button></div>
-    <div id="findings-table-container">
-    <table>
-    <thead>
-    <tr>
-    <th>Barcode</th><th>Item</th><th>Temuan</th><th>Status</th><th>Tanggal</th><th>Closed By</th><th>Close Date</th><th>Foto Close</th><th>Aksi</th></tr>
-    </thead>
-    <tbody>${rows}</tbody>
-    </table></div>
-    </div>`;
-  },
+    <div class="stat-row">
+      <div class="stat-card orange">
+        <div class="num">
+          ${openCount}
+        </div>
+        <div class="lbl">
+          Open
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="num">
+          ${closedCount}
+        </div>
+        <div class="lbl">
+          Closed
+        </div>
+      </div>
+      <div class="stat-card">
+
+        <div class="num">
+          ${totalCount}
+        </div>
+        <div class="lbl">
+          Total
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3>
+            Daftar Temuan
+          </h3>
+          <p>
+            Monitoring status temuan inspeksi
+          </p>
+        </div>
+      </div>
+      <div
+        style="
+          margin-bottom:15px;
+          display:flex;
+          gap:10px;
+        "
+      >
+        <button
+          class="btn btn-sm"
+          onclick="Finding.filter('ALL')">
+          Semua
+        </button>
+        <button
+          class="btn btn-sm"
+          style="
+            background:#f79009;
+            color:white;
+          "
+          onclick="Finding.filter('OPEN')">
+          Open
+        </button>
+        <button
+          class="btn btn-sm btn-success"
+          onclick="Finding.filter('CLOSED')">
+          Closed
+        </button>
+      </div>
+      <div id="findings-table-container">
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Barcode</th>
+                <th>Item</th>
+                <th>Temuan</th>
+                <th>Status</th>
+                <th>Tanggal</th>
+                <th>Closed By</th>
+                <th>Close Date</th>
+                <th>Foto Close</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                rows ||
+                `
+                  <tr>
+                    <td
+                      colspan="9"
+                      style="
+                        text-align:center;
+                        padding:30px;
+                        color:#667085;
+                      "
+                    >
+                      Tidak ada temuan
+                      sesuai filter.
+                    </td>
+                  </tr>
+                `
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+},
   adminMaps(){
     const rows = App.maps.map(m=>`
       <div class="card" style="display:flex;gap:16px;align-items:center;">
@@ -3474,6 +3666,7 @@ const Checklist = {
       await Store.saveFinding({
       recordId: savedRecord.id,
       pointId: point.id,
+      siteId: point.siteId || App.selectedSite,
       barcode: point.barcode,
       unitNumber: point.number,
       mapName: App.maps.find(m => m.id===point.mapId)?.name || "-",
